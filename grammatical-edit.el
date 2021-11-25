@@ -1321,7 +1321,7 @@ A and B are strings."
              (string-equal last-char "'"))))))
 
 (defun grammatical-edit-node-type-at-point ()
-  (tsc-node-type (tree-sitter-node-at-point)))
+  (ignore-errors (tsc-node-type (tree-sitter-node-at-point))))
 
 (defun grammatical-edit-in-string-p ()
   (eq (grammatical-edit-node-type-at-point) 'string))
