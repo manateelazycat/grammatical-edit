@@ -1,8 +1,9 @@
 # What is grammatical-edit.el ?
-grammatical-edit.el is a plugin that provides grammatical edit base on tree-sitter. 
+grammatical-edit.el is a plugin that provides grammatical edit base on tree-sitter.
 
 ## Installation
-Clone or download this repository (path of the folder is the `<path-to-grammatical-edit>` used below).
+1. Install tree-sitter first: https://emacs-tree-sitter.github.io/installation/
+2. Clone or download this repository (path of the folder is the `<path-to-grammatical-edit>` used below).
 
 In your `~/.emacs`, add the following two lines:
 ```Elisp
