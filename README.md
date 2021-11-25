@@ -1,5 +1,5 @@
 # What is grammatical-edit.el ?
-grammatical-edit.el is a plugin that provides grammatical parenthesis completion.
+grammatical-edit.el is a plugin that provides grammatical edit base on tree-sitter.
 
 ## Installation
 Clone or download this repository (path of the folder is the `<path-to-grammatical-edit>` used below).
