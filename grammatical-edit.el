@@ -495,7 +495,22 @@ When in comment, kill to the beginning of the line."
 
 (defun grammatical-edit-jump-left ()
   (interactive)
-  (goto-char (tsc-node-start-position (tsc-get-prev-named-sibling (tree-sitter-node-at-point)))))
+  (let* ((current-node (tree-sitter-node-at-point))
+         (prev-node (tsc-get-prev-sibling current-node))
+         (current-node-text (tsc-node-text current-node)))
+    (cond ((looking-back "\\s-+")
+           (search-backward-regexp "[^ \t\n]" nil t))
+          ((bolp)
+           (previous-line 1)
+           (end-of-line)
+           (search-backward-regexp "[^ \t\n]" nil t))
+          ((grammatical-edit-in-string-p)
+           (goto-char (tsc-node-start-position current-node)))
+          ((> (length current-node-text) 0)
+           (backward-char (length current-node-text)))
+          (prev-node
+           (goto-char (tsc-node-start-position prev-node)))
+          )))
 
 (defun grammatical-edit-jump-right ()
   (interactive)
@@ -508,6 +523,8 @@ When in comment, kill to the beginning of the line."
            (next-line 1)
            (beginning-of-line)
            (search-forward-regexp "\\s-+" nil t))
+          ((grammatical-edit-in-string-p)
+           (goto-char (tsc-node-end-position current-node)))
           ((> (length current-node-text) 0)
            (forward-char (length current-node-text)))
           (next-node
