@@ -361,7 +361,7 @@ When in comment, kill to the beginning of the line."
          (grammatical-edit-wrap-region "(" ")"))
         ((grammatical-edit-in-string-p)
          (let ((string-bound (grammatical-edit-string-start+end-points)))
-           (grammatical-edit-wrap (car string-bound) (1+ (cdr string-bound))
+           (grammatical-edit-wrap (car string-bound) (cdr string-bound)
                                   "(" ")")))
         ((grammatical-edit-in-comment-p)
          (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol)
@@ -383,7 +383,7 @@ When in comment, kill to the beginning of the line."
          (grammatical-edit-wrap-region "[" "]"))
         ((grammatical-edit-in-string-p)
          (let ((string-bound (grammatical-edit-string-start+end-points)))
-           (grammatical-edit-wrap (car string-bound) (1+ (cdr string-bound))
+           (grammatical-edit-wrap (car string-bound) (cdr string-bound)
                                   "[" "]")))
         ((grammatical-edit-in-comment-p)
          (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol)
@@ -404,7 +404,7 @@ When in comment, kill to the beginning of the line."
          (grammatical-edit-wrap-region "{" "}"))
         ((grammatical-edit-in-string-p)
          (let ((string-bound (grammatical-edit-string-start+end-points)))
-           (grammatical-edit-wrap (car string-bound) (1+ (cdr string-bound))
+           (grammatical-edit-wrap (car string-bound) (cdr string-bound)
                                   "{" "}")))
         ((grammatical-edit-in-comment-p)
          (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol)
@@ -427,7 +427,7 @@ When in comment, kill to the beginning of the line."
         ((region-active-p)
          (grammatical-edit-wrap-region "\"" "\""))
         ((grammatical-edit-in-string-p)
-         (goto-char (1+ (cdr (grammatical-edit-string-start+end-points)))))
+         (goto-char (cdr (grammatical-edit-string-start+end-points))))
         ((grammatical-edit-in-comment-p)
          (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol)
                                 "\"" "\""))
@@ -463,7 +463,7 @@ When in comment, kill to the beginning of the line."
 (defun grammatical-edit-jump-out-pair-and-newline ()
   (interactive)
   (cond ((grammatical-edit-in-string-p)
-         (goto-char (1+ (cdr (grammatical-edit-string-start+end-points))))
+         (goto-char (cdr (grammatical-edit-string-start+end-points)))
          (newline-and-indent))
         (t
          ;; Just do when have `up-list' in next step.
@@ -621,7 +621,7 @@ When in comment, kill to the beginning of the line."
       (backward-delete-char 1)
       (if (grammatical-edit-in-string-escape-p)
           (backward-delete-char 1)))
-     ((eq (point) (cdr start+end))
+     ((eq (point) (-1 (cdr start+end)))
       (backward-delete-char 1)
       (delete-char 1)))))
 
@@ -647,7 +647,7 @@ When in comment, kill to the beginning of the line."
            ;; If the cursor is not double quotes before and after, delete the previous character.
            (t
             (delete-char 1))))))
-     ((not (eq (point) (cdr start+end)))
+     ((not (eq (point) (-1 (cdr start+end))))
       (cond ((grammatical-edit-in-string-escape-p)
              (delete-char -1))
             ((eq (char-after) ?\\ )
@@ -661,7 +661,7 @@ When in comment, kill to the beginning of the line."
   (let ((original-point (point))
         (start+end (grammatical-edit-string-start+end-points)))
     (let ((start (car start+end))
-          (end (cdr start+end)))
+          (end (-1 (cdr start+end))))
       (let* ((escaped-string
               (cond ((not (consp argument))
                      (buffer-substring (1+ start) end))
@@ -1251,13 +1251,8 @@ A and B are strings."
       (beginning-of-line))
     (parse-partial-sexp (point) point)))
 
-(defun grammatical-edit-string-start+end-points (&optional state)
-  (ignore-errors
-    (save-excursion
-      (let ((start (nth 8 (or state (grammatical-edit-current-parse-state)))))
-        (goto-char start)
-        (forward-sexp 1)
-        (cons start (1- (point)))))))
+(defun grammatical-edit-string-start+end-points ()
+  (tsc-node-position-range (tree-sitter-node-at-point)))
 
 (defun grammatical-edit-after-open-pair-p ()
   (unless (bobp)
