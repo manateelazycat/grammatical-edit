@@ -247,25 +247,6 @@ output: [ | ]
           (t
            (insert " ")))))
 
-(defun grammatical-edit-match-paren (arg)
-  "Go to the matching parenthesis if on parenthesis, otherwise insert %."
-  (interactive "p")
-  (cond ((or (grammatical-edit-in-comment-p)
-             (grammatical-edit-in-string-p))
-         (self-insert-command (or arg 1)))
-        ((looking-at "\\s\(\\|\\s\{\\|\\s\[")
-         (forward-list))
-        ((looking-back "\\s\)\\|\\s\}\\|\\s\\]")
-         (backward-list))
-        (t
-         (cond
-          ;; Enhancement the automatic jump of web-mode.
-          ((derived-mode-p 'web-mode)
-           (grammatical-edit-web-mode-match-paren))
-          (t
-           (self-insert-command (or arg 1))))
-         )))
-
 (defun grammatical-edit-web-mode-match-paren ()
   (require 'sgml-mode)
   (cond ((looking-at "<")
@@ -356,6 +337,9 @@ When in comment, kill to the beginning of the line."
     (grammatical-edit-wrap-round-pair))
    ))
 
+(defun grammatical-edit-move-to-parent-internal ()
+  (goto-char (+ 1(tsc-node-start-position (tsc-get-parent (tree-sitter-node-at-point))))))
+
 (defun grammatical-edit-wrap-round-pair ()
   (cond ((region-active-p)
          (grammatical-edit-wrap-region "(" ")"))
@@ -372,10 +356,7 @@ When in comment, kill to the beginning of the line."
   ;; Indent wrap area.
   (grammatical-edit-indent-parenthesis-area)
   ;; Jump to internal parenthesis start position.
-  (up-list)
-  (grammatical-edit-match-paren 1)
-  (forward-char)
-  )
+  (grammatical-edit-move-to-parent-internal))
 
 (defun grammatical-edit-wrap-bracket ()
   (interactive)
@@ -394,9 +375,7 @@ When in comment, kill to the beginning of the line."
   ;; Indent wrap area.
   (grammatical-edit-indent-parenthesis-area)
   ;; Jump to internal parenthesis start position.
-  (up-list)
-  (grammatical-edit-match-paren 1)
-  (forward-char))
+  (grammatical-edit-move-to-parent-internal))
 
 (defun grammatical-edit-wrap-curly ()
   (interactive)
@@ -412,8 +391,10 @@ When in comment, kill to the beginning of the line."
         (t
          (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp)
                                 "{" "}")))
-  ;; Forward to jump in parenthesis.
-  (forward-char))
+  ;; Indent wrap area.
+  (grammatical-edit-indent-parenthesis-area)
+  ;; Jump to internal parenthesis start position.
+  (grammatical-edit-move-to-parent-internal))
 
 (defun grammatical-edit-wrap-double-quote ()
   (interactive)
@@ -1394,13 +1375,14 @@ A and B are strings."
     (ielm-return))
    ;; Newline and indent region if cursor in parentheses and character is not blank after cursor.
    ((and (looking-back "(\s*\\|{\s*\\|\\[\s*")
-         (looking-at-p "[[:space:]]*$"))
+         (looking-at-p "\s*)\\|\s*}\\|\s*\\]"))
     (newline arg)
     (open-line 1)
     (save-excursion
-      (let ((inhibit-message t)
-            (start (progn (grammatical-edit-jump-left) (point)))
-            (end (progn (grammatical-edit-match-paren nil) (point))))
+      (let* ((inhibit-message t)
+             (range (tsc-node-position-range (tree-sitter-node-at-point)))
+             (start (car range))
+             (end (cdr range)))
         (indent-region start end)))
     (indent-according-to-mode))
    ;; Newline and indent.
