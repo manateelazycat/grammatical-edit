@@ -1,7 +1,7 @@
-;;; grammatical-edit.el --- Grammatical object edit package
+;;; grammatical-edit.el --- Grammatical edit base on tree-sitter
 
 ;; Filename: grammatical-edit.el
-;; Description: Grammatical object edit package
+;; Description: Grammatical edit base on tree-sitter
 ;; Author: Andy Stewart <lazycat.manatee@gmail.com>
 ;; Maintainer: Andy Stewart <lazycat.manatee@gmail.com>
 ;; Copyright (C) 2021, Andy Stewart, all rights reserved.
@@ -39,7 +39,7 @@
 
 ;;; Commentary:
 ;;
-;; Grammatical object edit package
+;; Grammatical edit base on tree-sitter
 ;;
 
 ;;; Installation:
@@ -82,6 +82,7 @@
 ;;; Require
 (require 'subr-x)
 (require 'thingatpt)
+(require 'tree-sitter)
 
 ;;; Code:
 
