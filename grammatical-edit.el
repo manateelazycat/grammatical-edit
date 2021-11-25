@@ -340,61 +340,32 @@ When in comment, kill to the beginning of the line."
 (defun grammatical-edit-move-to-parent-internal ()
   (goto-char (+ 1(tsc-node-start-position (tsc-get-parent (tree-sitter-node-at-point))))))
 
-(defun grammatical-edit-wrap-round-pair ()
+(defun grammatical-edit-wrap-round-object (object-start object-end)
   (cond ((region-active-p)
-         (grammatical-edit-wrap-region "(" ")"))
+         (grammatical-edit-wrap-region object-start object-end))
         ((grammatical-edit-in-string-p)
-         (let ((string-bound (grammatical-edit-string-start+end-points)))
-           (grammatical-edit-wrap (car string-bound) (cdr string-bound)
-                                  "(" ")")))
+         (let ((string-bound (grammatical-edit-current-node-range)))
+           (grammatical-edit-wrap (car string-bound) (cdr string-bound) object-start object-end)))
         ((grammatical-edit-in-comment-p)
-         (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol)
-                                "(" ")"))
+         (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol) object-start object-end))
         (t
-         (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp)
-                                "(" ")")))
+         (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp) object-start object-end)))
   ;; Indent wrap area.
   (grammatical-edit-indent-parenthesis-area)
   ;; Jump to internal parenthesis start position.
   (grammatical-edit-move-to-parent-internal))
+
+(defun grammatical-edit-wrap-round-pair ()
+  (interactive)
+  (grammatical-edit-wrap-round-object "(" ")"))
 
 (defun grammatical-edit-wrap-bracket ()
   (interactive)
-  (cond ((region-active-p)
-         (grammatical-edit-wrap-region "[" "]"))
-        ((grammatical-edit-in-string-p)
-         (let ((string-bound (grammatical-edit-string-start+end-points)))
-           (grammatical-edit-wrap (car string-bound) (cdr string-bound)
-                                  "[" "]")))
-        ((grammatical-edit-in-comment-p)
-         (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol)
-                                "[" "]"))
-        (t
-         (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp)
-                                "[" "]")))
-  ;; Indent wrap area.
-  (grammatical-edit-indent-parenthesis-area)
-  ;; Jump to internal parenthesis start position.
-  (grammatical-edit-move-to-parent-internal))
+  (grammatical-edit-wrap-round-object "[" "]"))
 
 (defun grammatical-edit-wrap-curly ()
   (interactive)
-  (cond ((region-active-p)
-         (grammatical-edit-wrap-region "{" "}"))
-        ((grammatical-edit-in-string-p)
-         (let ((string-bound (grammatical-edit-string-start+end-points)))
-           (grammatical-edit-wrap (car string-bound) (cdr string-bound)
-                                  "{" "}")))
-        ((grammatical-edit-in-comment-p)
-         (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol)
-                                "{" "}"))
-        (t
-         (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp)
-                                "{" "}")))
-  ;; Indent wrap area.
-  (grammatical-edit-indent-parenthesis-area)
-  ;; Jump to internal parenthesis start position.
-  (grammatical-edit-move-to-parent-internal))
+  (grammatical-edit-wrap-round-object "{" "}"))
 
 (defun grammatical-edit-wrap-double-quote ()
   (interactive)
@@ -408,7 +379,7 @@ When in comment, kill to the beginning of the line."
         ((region-active-p)
          (grammatical-edit-wrap-region "\"" "\""))
         ((grammatical-edit-in-string-p)
-         (goto-char (cdr (grammatical-edit-string-start+end-points))))
+         (goto-char (cdr (grammatical-edit-current-node-range))))
         ((grammatical-edit-in-comment-p)
          (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol)
                                 "\"" "\""))
@@ -444,7 +415,7 @@ When in comment, kill to the beginning of the line."
 (defun grammatical-edit-jump-out-pair-and-newline ()
   (interactive)
   (cond ((grammatical-edit-in-string-p)
-         (goto-char (cdr (grammatical-edit-string-start+end-points)))
+         (goto-char (cdr (grammatical-edit-current-node-range)))
          (newline-and-indent))
         (t
          ;; Just do when have `up-list' in next step.
@@ -575,9 +546,9 @@ When in comment, kill to the beginning of the line."
     (delete-char 1)))
 
 (defun grammatical-edit-backward-delete-in-string ()
-  (let ((start+end (grammatical-edit-string-start+end-points)))
+  (let ((start+end (grammatical-edit-current-node-range)))
     (cond
-     ;; Some language, such as Python, `grammatical-edit-string-start+end-points' will return nil cause by `beginning-of-defun' retun nil.
+     ;; Some language, such as Python, `grammatical-edit-current-node-range' will return nil cause by `beginning-of-defun' retun nil.
      ;; This logical branch is handle this.
      ((not start+end)
       ;; First determine if it is in the string area?
@@ -602,14 +573,14 @@ When in comment, kill to the beginning of the line."
       (backward-delete-char 1)
       (if (grammatical-edit-in-string-escape-p)
           (backward-delete-char 1)))
-     ((eq (point) (-1 (cdr start+end)))
+     ((eq (point) (1- (cdr start+end)))
       (backward-delete-char 1)
       (delete-char 1)))))
 
 (defun grammatical-edit-forward-delete-in-string ()
-  (let ((start+end (grammatical-edit-string-start+end-points)))
+  (let ((start+end (grammatical-edit-current-node-range)))
     (cond
-     ;; Some language, such as Python, `grammatical-edit-string-start+end-points' will return nil cause by `beginning-of-defun' retun nil.
+     ;; Some language, such as Python, `grammatical-edit-current-node-range' will return nil cause by `beginning-of-defun' retun nil.
      ;; This logical branch is handle this.
      ((not start+end)
       ;; First determine if it is in the string area?
@@ -628,7 +599,7 @@ When in comment, kill to the beginning of the line."
            ;; If the cursor is not double quotes before and after, delete the previous character.
            (t
             (delete-char 1))))))
-     ((not (eq (point) (-1 (cdr start+end))))
+     ((not (eq (point) (1- (cdr start+end))))
       (cond ((grammatical-edit-in-string-escape-p)
              (delete-char -1))
             ((eq (char-after) ?\\ )
@@ -640,9 +611,9 @@ When in comment, kill to the beginning of the line."
 
 (defun grammatical-edit-splice-string (argument)
   (let ((original-point (point))
-        (start+end (grammatical-edit-string-start+end-points)))
+        (start+end (grammatical-edit-current-node-range)))
     (let ((start (car start+end))
-          (end (-1 (cdr start+end))))
+          (end (1- (cdr start+end))))
       (let* ((escaped-string
               (cond ((not (consp argument))
                      (buffer-substring (1+ start) end))
@@ -1208,8 +1179,7 @@ A and B are strings."
     (goto-char beg)
     (insert a)
     (goto-char (1+ end))
-    (insert b))
-  )
+    (insert b)))
 
 (defun grammatical-edit-wrap-region (a b)
   "When a region is active, insert A and B around it, and jump after A.
@@ -1232,7 +1202,7 @@ A and B are strings."
       (beginning-of-line))
     (parse-partial-sexp (point) point)))
 
-(defun grammatical-edit-string-start+end-points ()
+(defun grammatical-edit-current-node-range ()
   (tsc-node-position-range (tree-sitter-node-at-point)))
 
 (defun grammatical-edit-after-open-pair-p ()
