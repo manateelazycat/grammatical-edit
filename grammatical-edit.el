@@ -675,7 +675,9 @@ When in comment, kill to the beginning of the line."
       (delete-char -1)
       (forward-char))
     (condition-case condition
-        (progn (check-parens) (buffer-string))
+        (progn
+          (check-parens)
+          (buffer-string))
       (error nil))))
 
 (defun grammatical-edit-hack-kill-region (start end)
@@ -809,10 +811,9 @@ When in comment, kill to the beginning of the line."
       (while t
         (save-excursion
           (unless (grammatical-edit-ignore-errors (forward-sexp))
-            (if (grammatical-edit-ignore-errors (up-list))
-                (progn
-                  (setq end-of-list-p (eq (point-at-eol) eol))
-                  (throw 'return nil))))
+            (when (grammatical-edit-ignore-errors (up-list))
+              (setq end-of-list-p (eq (point-at-eol) eol))
+              (throw 'return nil)))
           (if (or (and (not firstp)
                        (eobp))
                   (not (grammatical-edit-ignore-errors (backward-sexp)))
@@ -832,10 +833,9 @@ When in comment, kill to the beginning of the line."
       (while t
         (save-excursion
           (unless (grammatical-edit-ignore-errors (backward-sexp))
-            (if (grammatical-edit-ignore-errors (up-list -1))
-                (progn
-                  (setq beg-of-list-p (eq (point-at-bol) bol))
-                  (throw 'return nil))))
+            (when (grammatical-edit-ignore-errors (up-list -1))
+              (setq beg-of-list-p (eq (point-at-bol) bol))
+              (throw 'return nil)))
           (if (or (and (not lastp)
                        (bobp))
                   (not (grammatical-edit-ignore-errors (forward-sexp)))
