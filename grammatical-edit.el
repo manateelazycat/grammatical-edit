@@ -442,10 +442,6 @@ When in comment, kill to the beginning of the line."
            (if (grammatical-edit-is-blank-line-p)
                (grammatical-edit-kill-current-line))))))
 
-(defun grammatical-edit-is-named-node (node)
-  "Check if the NODE is not a named node."
-  (and (tsc-node-p node) (not (tsc-node-named-p node))))
-
 (defun grammatical-edit-jump-left ()
   (interactive)
   (let* ((current-node (tree-sitter-node-at-point))
