@@ -297,8 +297,6 @@ When in comment, kill to the end of the line."
   (interactive)
   (cond ((derived-mode-p 'web-mode)
          (grammatical-edit-web-mode-kill))
-        ((derived-mode-p 'ruby-mode)
-         (grammatical-edit-ruby-mode-kill))
         (t
          (grammatical-edit-common-mode-kill))))
 
@@ -310,8 +308,6 @@ When in comment, kill to the beginning of the line."
   (interactive)
   (cond ((derived-mode-p 'web-mode)
          (grammatical-edit-web-mode-backward-kill))
-        ((derived-mode-p 'ruby-mode)
-         (grammatical-edit-ruby-mode-backward-kill))
         (t
          (grammatical-edit-common-mode-backward-kill))))
 
@@ -995,33 +991,6 @@ When in comment, kill to the beginning of the line."
 
 (defun grammatical-edit-web-mode-backward-kill ()
   (message "Backward kill in web-mode is currently not implemented."))
-
-(defun grammatical-edit-ruby-mode-kill ()
-  "It's a smarter kill function for `ruby-mode'.
-
-If current line is blank line, re-indent line after kill whole line.
-
-If current line is not blank, do `grammatical-edit-kill' first, re-indent line if rest line start with ruby keywords.
-"
-  (if (grammatical-edit-is-blank-line-p)
-      (grammatical-edit-kill-blank-line-and-reindent)
-    (grammatical-edit-kill-internal)))
-
-(defun grammatical-edit-ruby-mode-backward-kill ()
-  "It's a smarter kill function for `ruby-mode'.
-
-If current line is blank line, re-indent line after kill whole line.
-
-If current line is not blank, do `grammatical-edit-backward-kill' first, re-indent line if rest line start with ruby keywords.
-"
-  (if (grammatical-edit-is-blank-line-p)
-      (grammatical-edit-ignore-errors
-       (progn
-         (grammatical-edit-kill-blank-line-and-reindent)
-         (forward-line -1)
-         (end-of-line)))
-    (grammatical-edit-kill-internal)
-    ))
 
 (defun grammatical-edit-kill-blank-line-and-reindent ()
   (kill-region (beginning-of-thing 'line) (end-of-thing 'line))
