@@ -781,13 +781,11 @@ When in comment, kill to the beginning of the line."
         (eol (point-at-eol)))
     (let ((end-of-list-p (grammatical-edit-forward-sexps-to-kill beginning eol)))
       (if end-of-list-p (progn (up-list) (backward-char)))
-      (if kill-whole-line
-          (grammatical-edit-kill-sexps-on-whole-line beginning)
-        (kill-region beginning
-                     (if (and (not end-of-list-p)
-                              (eq (point-at-eol) eol))
-                         eol
-                       (point)))))))
+      (kill-region beginning
+                   (if (and (not end-of-list-p)
+                            (eq (point-at-eol) eol))
+                       eol
+                     (point))))))
 
 (defun grammatical-edit-kill-sexps-backward-on-line ()
   (if (grammatical-edit-in-char-p)
@@ -796,20 +794,17 @@ When in comment, kill to the beginning of the line."
         (bol (point-at-bol)))
     (let ((beg-of-list-p (grammatical-edit-backward-sexps-to-kill beginning bol)))
       (if beg-of-list-p (progn (up-list -1) (forward-char)))
-      (if kill-whole-line
-          (grammatical-edit-kill-sexps-on-whole-line beginning)
-        (kill-region (if (and (not beg-of-list-p)
-                              (eq (point-at-bol) bol))
-                         bol
-                       (point))
-                     beginning)))))
+      (kill-region (if (and (not beg-of-list-p)
+                            (eq (point-at-bol) bol))
+                       bol
+                     (point))
+                   beginning))))
 
 (defun grammatical-edit-forward-sexps-to-kill (beginning eol)
   (let ((end-of-list-p nil)
         (firstp t))
     (catch 'return
       (while t
-        (if (and kill-whole-line (eobp)) (throw 'return nil))
         (save-excursion
           (unless (grammatical-edit-ignore-errors (forward-sexp))
             (if (grammatical-edit-ignore-errors (up-list))
@@ -817,14 +812,12 @@ When in comment, kill to the beginning of the line."
                   (setq end-of-list-p (eq (point-at-eol) eol))
                   (throw 'return nil))))
           (if (or (and (not firstp)
-                       (not kill-whole-line)
                        (eobp))
                   (not (grammatical-edit-ignore-errors (backward-sexp)))
                   (not (eq (point-at-eol) eol)))
               (throw 'return nil)))
         (forward-sexp)
         (if (and firstp
-                 (not kill-whole-line)
                  (eobp))
             (throw 'return nil))
         (setq firstp nil)))
@@ -835,7 +828,6 @@ When in comment, kill to the beginning of the line."
         (lastp t))
     (catch 'return
       (while t
-        (if (and kill-whole-line (bobp)) (throw 'return nil))
         (save-excursion
           (unless (grammatical-edit-ignore-errors (backward-sexp))
             (if (grammatical-edit-ignore-errors (up-list -1))
@@ -843,39 +835,16 @@ When in comment, kill to the beginning of the line."
                   (setq beg-of-list-p (eq (point-at-bol) bol))
                   (throw 'return nil))))
           (if (or (and (not lastp)
-                       (not kill-whole-line)
                        (bobp))
                   (not (grammatical-edit-ignore-errors (forward-sexp)))
                   (not (eq (point-at-bol) bol)))
               (throw 'return nil)))
         (backward-sexp)
         (if (and lastp
-                 (not kill-whole-line)
                  (bobp))
             (throw 'return nil))
         (setq lastp nil)))
     beg-of-list-p))
-
-(defun grammatical-edit-kill-sexps-on-whole-line (beginning)
-  (kill-region beginning
-               (or (save-excursion
-                     (grammatical-edit-skip-whitespace t)
-                     (and (not (eq (char-after) ?\; ))
-                          (point)))
-                   (point-at-eol)))
-  (cond ((save-excursion (grammatical-edit-skip-whitespace nil (point-at-bol))
-                         (bolp))
-         (lisp-indent-line))
-        ((eobp) nil)
-        ((let ((syn-before (char-syntax (char-before)))
-               (syn-after  (char-syntax (char-after))))
-           (or (and (eq syn-before ?\) )
-                    (eq syn-after  ?\( ))
-               (and (eq syn-before ?\" )
-                    (eq syn-after  ?\" ))
-               (and (memq syn-before '(?_ ?w))
-                    (memq syn-after  '(?_ ?w)))))
-         (insert " "))))
 
 (defun grammatical-edit-common-mode-kill ()
   (if (grammatical-edit-is-blank-line-p)
@@ -1060,20 +1029,7 @@ If current line is not blank, do `grammatical-edit-backward-kill' first, re-inde
          (forward-line -1)
          (end-of-line)))
     ;; Do `grammatical-edit-kill' first.
-    (grammatical-edit-backward-kill-internal)
-
-    ;; Re-indent current line if line start with ruby keywords.
-    (when (let (in-beginning-block-p
-                in-end-block-p
-                current-symbol)
-            (save-excursion
-              (back-to-indentation)
-              (ignore-errors (setq current-symbol (buffer-substring-no-properties (beginning-of-thing 'symbol) (end-of-thing 'symbol))))
-              (setq in-beginning-block-p (member current-symbol '("class" "module" "else" "def" "if" "unless" "case" "while" "until" "for" "begin" "do")))
-              (setq in-end-block-p (member current-symbol '("end")))
-
-              (or in-beginning-block-p in-end-block-p)))
-      (indent-for-tab-command))))
+    ))
 
 (defun grammatical-edit-kill-blank-line-and-reindent ()
   (kill-region (beginning-of-thing 'line) (end-of-thing 'line))
