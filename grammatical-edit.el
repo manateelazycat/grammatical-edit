@@ -777,17 +777,21 @@ When in comment, kill to the beginning of the line."
 (defun grammatical-edit-kill-sexps-on-line ()
   (if (grammatical-edit-in-char-p)
       (backward-char 2))
-  (let ((beginning (point))
+  (let ((begin-point (point))
         (eol (point-at-eol)))
-    (let ((end-of-list-p (grammatical-edit-forward-sexps-to-kill beginning eol)))
+    (let ((end-of-list-p (grammatical-edit-forward-sexps-to-kill begin-point eol)))
       (when end-of-list-p
         (up-list)
         (backward-char))
-      (kill-region beginning
-                   (if (and (not end-of-list-p)
-                            (eq (point-at-eol) eol))
-                       eol
-                     (point))))))
+      (goto-char (if (and (not end-of-list-p)
+                          (eq (point-at-eol) eol))
+                     eol
+                   (point)))
+      ;; NOTE:
+      ;; Back to previous line if kill end point at beginng of line.
+      (when (bolp)
+        (backward-char 1))
+      (kill-region begin-point (point)))))
 
 (defun grammatical-edit-kill-sexps-backward-on-line ()
   (if (grammatical-edit-in-char-p)
@@ -1001,21 +1005,7 @@ If current line is not blank, do `grammatical-edit-kill' first, re-indent line i
 "
   (if (grammatical-edit-is-blank-line-p)
       (grammatical-edit-kill-blank-line-and-reindent)
-    ;; Do `grammatical-edit-kill' first.
-    (grammatical-edit-kill-internal)
-
-    ;; Re-indent current line if line start with ruby keywords.
-    (when (let (in-beginning-block-p
-                in-end-block-p
-                current-symbol)
-            (save-excursion
-              (back-to-indentation)
-              (ignore-errors (setq current-symbol (buffer-substring-no-properties (beginning-of-thing 'symbol) (end-of-thing 'symbol))))
-              (setq in-beginning-block-p (member current-symbol '("class" "module" "else" "def" "if" "unless" "case" "while" "until" "for" "begin" "do")))
-              (setq in-end-block-p (member current-symbol '("end")))
-
-              (or in-beginning-block-p in-end-block-p)))
-      (indent-for-tab-command))))
+    (grammatical-edit-kill-internal)))
 
 (defun grammatical-edit-ruby-mode-backward-kill ()
   "It's a smarter kill function for `ruby-mode'.
@@ -1030,7 +1020,7 @@ If current line is not blank, do `grammatical-edit-backward-kill' first, re-inde
          (grammatical-edit-kill-blank-line-and-reindent)
          (forward-line -1)
          (end-of-line)))
-    ;; Do `grammatical-edit-kill' first.
+    (grammatical-edit-kill-internal)
     ))
 
 (defun grammatical-edit-kill-blank-line-and-reindent ()
