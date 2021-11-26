@@ -899,6 +899,18 @@ When in comment, kill to the beginning of the line."
   (let ((range (tsc-node-position-range (tsc-get-parent (tsc-get-parent (tree-sitter-node-at-point))))))
     (kill-region (car range) (cdr range))))
 
+(defun grammatical-edit-kill-prepend-space ()
+  (kill-region (save-excursion
+                 (search-backward-regexp "[^ \t\n]" nil t)
+                 (forward-char 1)
+                 (point))
+               (point)))
+
+(defun grammatical-edit-at-tag-right (tag)
+  (save-excursion
+    (backward-char 1)
+    (eq (grammatical-edit-node-type-at-point) tag)))
+
 (defun grammatical-edit-web-mode-kill ()
   "It's a smarter kill function for `web-mode'."
   (if (grammatical-edit-is-blank-line-p)
@@ -908,12 +920,9 @@ When in comment, kill to the beginning of the line."
      ((eq (grammatical-edit-node-type-at-point) 'attribute_value)
       (kill-region (point) (tsc-node-end-position (tree-sitter-node-at-point))))
 
-     ;; Kill attribute name and value.
-     ((eq (grammatical-edit-node-type-at-point) 'attribute_name)
-      (grammatical-edit-kill-parent-node))
-
-     ;; Kill directive value, such as 'v-if ...'
-     ((eq (grammatical-edit-node-type-at-point) 'directive_name)
+     ;; Kill parent node if cursor at attribute or directive node.
+     ((or (eq (grammatical-edit-node-type-at-point) 'attribute_name)
+          (eq (grammatical-edit-node-type-at-point) 'directive_name))
       (grammatical-edit-kill-parent-node))
 
      ;; Jump to next non-blank char if in tag area.
@@ -923,15 +932,9 @@ When in comment, kill to the beginning of the line."
      ;; Clean blank spaces before close tag.
      ((string-equal (grammatical-edit-node-type-at-point) "/>")
       (cond ((looking-back "\\s-")
-             (kill-region (save-excursion
-                            (search-backward-regexp "[^ \t\n]" nil t)
-                            (forward-char 1)
-                            (point))
-                          (point)))
+             (grammatical-edit-kill-prepend-space))
             ;; Kill tag if nothing in tag area.
-            ((save-excursion
-               (backward-char 1)
-               (eq (grammatical-edit-node-type-at-point) 'tag_name))
+            ((grammatical-edit-at-tag-right 'tag_name)
              (backward-char 1)
              (grammatical-edit-kill-parent-node))
             (t
@@ -941,15 +944,9 @@ When in comment, kill to the beginning of the line."
      ;; Clean blank spaces before start tag.
      ((string-equal (grammatical-edit-node-type-at-point) ">")
       (cond ((looking-back "\\s-")
-             (kill-region (save-excursion
-                            (search-backward-regexp "[^ \t\n]" nil t)
-                            (forward-char 1)
-                            (point))
-                          (point)))
+             (grammatical-edit-kill-prepend-space))
             ;; Kill tag content if nothing in tag area.
-            ((save-excursion
-               (backward-char 1)
-               (eq (grammatical-edit-node-type-at-point) 'tag_name))
+            ((grammatical-edit-at-tag-right 'tag_name)
              (backward-char 1)
              (grammatical-edit-kill-grandfather-node))
             (t
@@ -959,15 +956,9 @@ When in comment, kill to the beginning of the line."
      ;; Clean blank space before </
      ((string-equal (grammatical-edit-node-type-at-point) "</")
       (cond ((looking-back "\\s-")
-             (kill-region (save-excursion
-                            (search-backward-regexp "[^ \t\n]" nil t)
-                            (forward-char 1)
-                            (point))
-                          (point)))
+             (grammatical-edit-kill-prepend-space))
             ;; Kill tag content if nothing in tag area.
-            ((save-excursion
-               (backward-char 1)
-               (string-equal (grammatical-edit-node-type-at-point) ">"))
+            ((grammatical-edit-at-tag-right ">")
              (backward-char 1)
              (grammatical-edit-kill-grandfather-node))
             (t
@@ -975,9 +966,12 @@ When in comment, kill to the beginning of the line."
             ))
 
      ;; Kill all tag content if cursor in tag start area.
-     ((or (string-equal (grammatical-edit-node-type-at-point) "<")
-          (eq (grammatical-edit-node-type-at-point) 'tag_name))
+     ((eq (grammatical-edit-node-type-at-point) 'tag_name)
       (grammatical-edit-kill-parent-node))
+
+     ;; Kill tag content if cursor at left of <
+     ((string-equal (grammatical-edit-node-type-at-point) "<")
+      (grammatical-edit-kill-grandfather-node))
 
      ;; Kill string if cursor at start of quote.
      ((string-equal (grammatical-edit-node-type-at-point) "\"")
