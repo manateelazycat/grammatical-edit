@@ -891,99 +891,138 @@ When in comment, kill to the beginning of the line."
          (end-of-line)))
     (grammatical-edit-backward-kill-internal)))
 
+(defun grammatical-edit-kill-parent-node ()
+  (let ((range (tsc-node-position-range (tsc-get-parent (tree-sitter-node-at-point)))))
+    (kill-region (car range) (cdr range))))
+
+(defun grammatical-edit-kill-grandfather-node ()
+  (let ((range (tsc-node-position-range (tsc-get-parent (tsc-get-parent (tree-sitter-node-at-point))))))
+    (kill-region (car range) (cdr range))))
+
 (defun grammatical-edit-web-mode-kill ()
   "It's a smarter kill function for `web-mode'."
   (if (grammatical-edit-is-blank-line-p)
       (grammatical-edit-kill-blank-line-and-reindent)
     (cond
-     ;; Kill all content wrap by <% ... %> when right is <%
-     ((and (looking-at "<%")
-           (save-excursion (search-forward-regexp "%>" nil t)))
-      (kill-region (point) (search-forward-regexp "%>" nil t)))
-     ;; Kill content in {{ }} if left is {{.
-     ((and (looking-back "{{\\s-?")
-           (save-excursion (search-forward-regexp "\\s-?}}")))
-      (let ((start (save-excursion
-                     (search-backward-regexp "{{\\s-?" nil t)
-                     (forward-char 2)
-                     (point)))
-            (end (save-excursion
-                   (search-forward-regexp "\\s-?}}" nil t)
-                   (backward-char 2)
-                   (point))))
-        (kill-region start end)))
-     ;; Kill content in <% ... %> if left is <% or <%=
-     ((and (looking-back "<%=?\\s-?")
-           (save-excursion (search-forward-regexp "%>" nil t)))
-      (let ((start (point))
-            (end (progn
-                   (search-forward-regexp "%>" nil t)
-                   (backward-char 2)
-                   (point)
-                   )))
-        (kill-region start end)))
-     ;; Kill string if current pointer in string area.
-     ((grammatical-edit-in-string-p)
-      (grammatical-edit-kill-internal))
-     ;; Kill string in single quote.
-     ((grammatical-edit-in-single-quote-string-p)
+     ;; Kill from current point to attribute end position.
+     ((eq (grammatical-edit-node-type-at-point) 'attribute_value)
+      (kill-region (point) (tsc-node-end-position (tree-sitter-node-at-point))))
+
+     ;; Kill attribute name and value.
+     ((eq (grammatical-edit-node-type-at-point) 'attribute_name)
+      (grammatical-edit-kill-parent-node))
+
+     ;; Kill directive value, such as 'v-if ...'
+     ((eq (grammatical-edit-node-type-at-point) 'directive_name)
+      (grammatical-edit-kill-parent-node))
+
+     ;; Jump to next non-blank char if in tag area.
+     ((eq (grammatical-edit-node-type-at-point) 'self_closing_tag)
+      (search-forward-regexp "\\s-+"))
+
+     ;; Clean blank spaces before close tag.
+     ((string-equal (grammatical-edit-node-type-at-point) "/>")
+      (cond ((looking-back "\\s-")
+             (kill-region (save-excursion
+                            (search-backward-regexp "[^ \t\n]" nil t)
+                            (forward-char 1)
+                            (point))
+                          (point)))
+            ;; Kill tag if nothing in tag area.
+            ((save-excursion
+               (backward-char 1)
+               (eq (grammatical-edit-node-type-at-point) 'tag_name))
+             (backward-char 1)
+             (grammatical-edit-kill-parent-node))
+            (t
+             (message "Nothing to kill in tag. ;)"))
+            ))
+
+     ;; Clean blank spaces before start tag.
+     ((string-equal (grammatical-edit-node-type-at-point) ">")
+      (cond ((looking-back "\\s-")
+             (kill-region (save-excursion
+                            (search-backward-regexp "[^ \t\n]" nil t)
+                            (forward-char 1)
+                            (point))
+                          (point)))
+            ;; Kill tag content if nothing in tag area.
+            ((save-excursion
+               (backward-char 1)
+               (eq (grammatical-edit-node-type-at-point) 'tag_name))
+             (backward-char 1)
+             (grammatical-edit-kill-grandfather-node))
+            (t
+             (message "Nothing to kill in tag. ;)"))
+            ))
+
+     ;; Clean blank space before </
+     ((string-equal (grammatical-edit-node-type-at-point) "</")
+      (cond ((looking-back "\\s-")
+             (kill-region (save-excursion
+                            (search-backward-regexp "[^ \t\n]" nil t)
+                            (forward-char 1)
+                            (point))
+                          (point)))
+            ;; Kill tag content if nothing in tag area.
+            ((save-excursion
+               (backward-char 1)
+               (string-equal (grammatical-edit-node-type-at-point) ">"))
+             (backward-char 1)
+             (grammatical-edit-kill-grandfather-node))
+            (t
+             (message "Nothing to kill in tag. ;)"))
+            ))
+
+     ;; Kill all tag content if cursor in tag start area.
+     ((or (string-equal (grammatical-edit-node-type-at-point) "<")
+          (eq (grammatical-edit-node-type-at-point) 'tag_name))
+      (grammatical-edit-kill-parent-node))
+
+     ;; Kill string if cursor at start of quote.
+     ((string-equal (grammatical-edit-node-type-at-point) "\"")
+      (forward-char 1)
+      (grammatical-edit-kill-parent-node))
+
+     ;; Kill content if in start_tag area.
+     ((eq (grammatical-edit-node-type-at-point) 'start_tag)
+      (cond ((looking-at "\\s-")
+             (search-forward-regexp "\\s-+"))
+            ((save-excursion
+               (grammatical-edit-skip-whitespace t (point-at-eol))
+               (or (eq (char-after) ?\; )
+                   (eolp)))
+             (kill-line)
+             )))
+
+     ;; JavaScript string not identify by tree-sitter.
+     ((and (eq (grammatical-edit-node-type-at-point) 'raw_text)
+           (grammatical-edit-in-string-state-p))
       (grammatical-edit-kill-line-in-single-quote-string))
-     ;; Kill element if no attributes in tag.
-     ((and
-       (looking-at "\\s-?+</")
-       (looking-back "<[a-z]+\\s-?>\\s-?+"))
-      (web-mode-element-kill 1))
-     ;; Kill whitespace in tag.
-     ((looking-at "\\s-+>")
-      (search-forward-regexp ">" nil t)
-      (backward-char)
-      (grammatical-edit-delete-whitespace-before-cursor))
-     ;; Jump in content if point in start tag.
-     ((and (looking-at ">")
-           (looking-back "<[a-z]+"))
-      (forward-char 1))
-     ;; Kill tag if in end tag.
-     ((and (looking-at ">")
-           (looking-back "</[a-z]+"))
-      (beginning-of-thing 'sexp)
-      (web-mode-element-kill 1))
-     ;; Kill attributes if point in attributes area.
-     ((and
-       (web-mode-attribute-beginning-position)
-       (web-mode-attribute-end-position)
-       (>= (point) (web-mode-attribute-beginning-position))
-       (<= (point) (web-mode-attribute-end-position)))
-      (web-mode-attribute-kill))
-     ;; Kill attributes if only space between point and attributes start.
-     ((and
-       (looking-at "\\s-+")
-       (save-excursion
-         (search-forward-regexp "\\s-+" nil t)
-         (equal (point) (web-mode-attribute-beginning-position))))
-      (search-forward-regexp "\\s-+")
-      (web-mode-attribute-kill))
-     ;; Kill line if rest chars is whitespace.
-     ((looking-at "\\s-?+\n")
-      (kill-line))
-     ;; Kill region if mark is active.
-     (mark-active
-      (kill-region (region-beginning) (region-end)))
-     ;; Try to kill element if cursor in attribute area.
-     ((grammatical-edit-in-attribute-p)
-      ;; Don't kill rest string if cursor position at end tag before.
-      (when (equal (point)
-                   (save-excursion
-                     (web-mode-tag-end)
-                     (point)))
-        (kill-region (point) (progn
-                               (web-mode-tag-match)
-                               (point)))))
+
+     ;; Use common kill at last.
      (t
-      (unless (grammatical-edit-ignore-errors
-               ;; Kill all sexps in current line.
-               (grammatical-edit-kill-sexps-on-line))
-        ;; Kill block if sexp parse failed.
-        (web-mode-block-kill))))))
+      (grammatical-edit-common-mode-kill))
+     )))
+
+(defun grammatical-edit-in-string-state-p (&optional state)
+  (ignore-errors
+    (unless (or (bobp) (eobp))
+      (save-excursion
+        (or
+         ;; In most situation, point inside a string when 4rd state `parse-partial-sexp' is non-nil.
+         ;; but at this time, if the string delimiter is the last character of the line, the point is not in the string.
+         ;; So we need exclude this situation when check state of `parse-partial-sexp'.
+         (and
+          (nth 3 (or state (grammatical-edit-current-parse-state)))
+          (not (equal (point) (line-end-position))))
+         (and
+          (eq (get-text-property (point) 'face) 'font-lock-string-face)
+          (eq (get-text-property (- (point) 1) 'face) 'font-lock-string-face))
+         (and
+          (eq (get-text-property (point) 'face) 'font-lock-doc-face)
+          (eq (get-text-property (- (point) 1) 'face) 'font-lock-doc-face))
+         )))))
 
 (defun grammatical-edit-in-attribute-p ()
   "Return non-nil if cursor in attribute area."
@@ -1154,6 +1193,25 @@ Just like `paredit-splice-sexp+' style."
     (web-mode-element-vanish 1)
     (back-to-indentation)
     ))
+
+(defun grammatical-edit-match-paren (arg)
+  "Go to the matching parenthesis if on parenthesis, otherwise insert %."
+  (interactive "p")
+  (cond ((or (grammatical-edit-in-comment-p)
+             (grammatical-edit-in-string-p))
+         (self-insert-command (or arg 1)))
+        ((looking-at "\\s\(\\|\\s\{\\|\\s\[")
+         (forward-list))
+        ((looking-back "\\s\)\\|\\s\}\\|\\s\\]")
+         (backward-list))
+        (t
+         (cond
+          ;; Enhancement the automatic jump of web-mode.
+          ((derived-mode-p 'web-mode)
+           (grammatical-edit-web-mode-match-paren))
+          (t
+           (self-insert-command (or arg 1))))
+         )))
 
 ;;;;;;;;;;;;;;;;; Utils functions ;;;;;;;;;;;;;;;;;;;;;;
 
