@@ -137,9 +137,7 @@
            (backward-char 2))
           (t
            (insert "{}")
-           (backward-char)))
-    )
-   ))
+           (backward-char))))))
 
 (defun grammatical-edit-open-bracket ()
   (interactive)
@@ -986,7 +984,6 @@ When in comment, kill to the beginning of the line."
                (grammatical-edit-kill-sexps-on-line))
         ;; Kill block if sexp parse failed.
         (web-mode-block-kill))))))
-
 
 (defun grammatical-edit-in-attribute-p ()
   "Return non-nil if cursor in attribute area."
