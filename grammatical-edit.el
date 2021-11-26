@@ -102,59 +102,34 @@
 
 ;;;;;;;;;;;;;;;;; Interactive functions ;;;;;;;;;;;;;;;;;;;;;;
 
-(defun grammatical-edit-open-round ()
+(defun grammatical-edit-open-object (object-start object-end)
   (interactive)
   (cond
    ((region-active-p)
     (grammatical-edit-wrap-round))
    ((and (grammatical-edit-in-string-p)
          (derived-mode-p 'js-mode))
-    (insert "()")
+    (insert (format "%s%s" object-start object-end))
     (backward-char))
    ((or (grammatical-edit-in-string-p)
         (grammatical-edit-in-comment-p))
-    (insert "("))
+    (insert object-start))
    (t
-    (insert "()")
+    (insert (format "%s%s" object-start object-end))
     (backward-char))
    ))
+
+(defun grammatical-edit-open-round ()
+  (interactive)
+  (grammatical-edit-open-object "(" ")"))
 
 (defun grammatical-edit-open-curly ()
   (interactive)
-  (cond
-   ((region-active-p)
-    (grammatical-edit-wrap-curly))
-   ((and (grammatical-edit-in-string-p)
-         (derived-mode-p 'js-mode))
-    (insert "{}")
-    (backward-char))
-   ((or (grammatical-edit-in-string-p)
-        (grammatical-edit-in-comment-p))
-    (insert "{"))
-   (t
-    (cond ((derived-mode-p 'ruby-mode)
-           (insert "{  }")
-           (backward-char 2))
-          (t
-           (insert "{}")
-           (backward-char))))))
+  (grammatical-edit-open-object "{" "}"))
 
 (defun grammatical-edit-open-bracket ()
   (interactive)
-  (cond
-   ((region-active-p)
-    (grammatical-edit-wrap-bracket))
-   ((and (grammatical-edit-in-string-p)
-         (derived-mode-p 'js-mode))
-    (insert "[]")
-    (backward-char))
-   ((or (grammatical-edit-in-string-p)
-        (grammatical-edit-in-comment-p))
-    (insert "["))
-   (t
-    (insert "[]")
-    (backward-char))
-   ))
+  (grammatical-edit-open-object "[" "]"))
 
 (defun grammatical-edit-fix-unbalanced-parentheses ()
   (interactive)
