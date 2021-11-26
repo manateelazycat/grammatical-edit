@@ -780,7 +780,9 @@ When in comment, kill to the beginning of the line."
   (let ((beginning (point))
         (eol (point-at-eol)))
     (let ((end-of-list-p (grammatical-edit-forward-sexps-to-kill beginning eol)))
-      (if end-of-list-p (progn (up-list) (backward-char)))
+      (when end-of-list-p
+        (up-list)
+        (backward-char))
       (kill-region beginning
                    (if (and (not end-of-list-p)
                             (eq (point-at-eol) eol))
