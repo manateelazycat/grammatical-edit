@@ -1024,13 +1024,6 @@ When in comment, kill to the beginning of the line."
           (eq (get-text-property (- (point) 1) 'face) 'font-lock-doc-face))
          )))))
 
-(defun grammatical-edit-in-attribute-p ()
-  "Return non-nil if cursor in attribute area."
-  (save-mark-and-excursion
-    (web-mode-attribute-select)
-    mark-active
-    ))
-
 (defun grammatical-edit-web-mode-backward-kill ()
   (message "Backward kill in web-mode is currently not implemented."))
 
