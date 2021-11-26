@@ -779,8 +779,7 @@ When in comment, kill to the beginning of the line."
       (when end-of-list-p
         (up-list)
         (backward-char))
-      (goto-char (if (and (not end-of-list-p)
-                          (eq (point-at-eol) eol))
+      (goto-char (if (and (not end-of-list-p) (eq (point-at-eol) eol))
                      eol
                    (point)))
       ;; NOTE:
@@ -795,9 +794,10 @@ When in comment, kill to the beginning of the line."
   (let ((beginning (point))
         (bol (point-at-bol)))
     (let ((beg-of-list-p (grammatical-edit-backward-sexps-to-kill beginning bol)))
-      (if beg-of-list-p (progn (up-list -1) (forward-char)))
-      (kill-region (if (and (not beg-of-list-p)
-                            (eq (point-at-bol) bol))
+      (when beg-of-list-p
+        (up-list -1)
+        (forward-char))
+      (kill-region (if (and (not beg-of-list-p) (eq (point-at-bol) bol))
                        bol
                      (point))
                    beginning))))
