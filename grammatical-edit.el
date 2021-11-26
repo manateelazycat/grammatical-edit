@@ -1226,9 +1226,10 @@ A and B are strings."
 (defun grammatical-edit-in-comment-p ()
   (or (eq (grammatical-edit-node-type-at-point) 'comment)
       (and (point-at-eol)
-           (save-excursion
-             (backward-char 1)
-             (eq (grammatical-edit-node-type-at-point) 'comment)))))
+           (ignore-errors
+             (save-excursion
+               (backward-char 1)
+               (eq (grammatical-edit-node-type-at-point) 'comment))))))
 
 (defun grammatical-edit-in-string-escape-p ()
   (let ((oddp nil))
