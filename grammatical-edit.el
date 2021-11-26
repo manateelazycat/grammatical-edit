@@ -1298,7 +1298,7 @@ A and B are strings."
     (open-line 1)
     (save-excursion
       (let* ((inhibit-message t)
-             (range (tsc-node-position-range (tree-sitter-node-at-point)))
+             (range (grammatical-edit-current-node-range))
              (start (car range))
              (end (cdr range)))
         (indent-region start end)))
