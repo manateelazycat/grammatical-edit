@@ -331,23 +331,19 @@ When in comment, kill to the beginning of the line."
     (grammatical-edit-wrap-round-pair))
    ))
 
-(defun grammatical-edit-move-to-parent-internal ()
-  (goto-char (+ 1 (tsc-node-start-position (tsc-get-parent (tree-sitter-node-at-point))))))
-
 (defun grammatical-edit-wrap-round-object (object-start object-end)
-  (cond ((region-active-p)
-         (grammatical-edit-wrap-region object-start object-end))
-        ((grammatical-edit-in-string-p)
-         (let ((string-bound (grammatical-edit-current-node-range)))
-           (grammatical-edit-wrap (car string-bound) (cdr string-bound) object-start object-end)))
-        ((grammatical-edit-in-comment-p)
-         (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol) object-start object-end))
-        (t
-         (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp) object-start object-end)))
-  ;; Indent wrap area.
-  (grammatical-edit-indent-parent-area)
-  ;; Jump to internal parenthesis start position.
-  (grammatical-edit-move-to-parent-internal))
+  (save-excursion
+    (cond ((region-active-p)
+           (grammatical-edit-wrap-region object-start object-end))
+          ((grammatical-edit-in-string-p)
+           (let ((string-bound (grammatical-edit-current-node-range)))
+             (grammatical-edit-wrap (car string-bound) (cdr string-bound) object-start object-end)))
+          ((grammatical-edit-in-comment-p)
+           (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol) object-start object-end))
+          (t
+           (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp) object-start object-end)))
+    ;; Indent wrap area.
+    (grammatical-edit-indent-parent-area)))
 
 (defun grammatical-edit-wrap-round-pair ()
   (interactive)
