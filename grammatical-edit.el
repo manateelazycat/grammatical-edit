@@ -336,7 +336,7 @@ When in comment, kill to the beginning of the line."
    ))
 
 (defun grammatical-edit-move-to-parent-internal ()
-  (goto-char (+ 1(tsc-node-start-position (tsc-get-parent (tree-sitter-node-at-point))))))
+  (goto-char (+ 1 (tsc-node-start-position (tsc-get-parent (tree-sitter-node-at-point))))))
 
 (defun grammatical-edit-wrap-round-object (object-start object-end)
   (cond ((region-active-p)
@@ -349,7 +349,7 @@ When in comment, kill to the beginning of the line."
         (t
          (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp) object-start object-end)))
   ;; Indent wrap area.
-  (grammatical-edit-indent-parenthesis-area)
+  (grammatical-edit-indent-parent-area)
   ;; Jump to internal parenthesis start position.
   (grammatical-edit-move-to-parent-internal))
 
@@ -1053,16 +1053,9 @@ If current line is not blank, do `grammatical-edit-backward-kill' first, re-inde
   (kill-region (beginning-of-thing 'line) (end-of-thing 'line))
   (back-to-indentation))
 
-(defun grammatical-edit-indent-parenthesis-area ()
-  (let ((bound-start (save-excursion
-                       (backward-up-list)
-                       (point)))
-        (bound-end (save-excursion
-                     (up-list)
-                     (point)
-                     )))
-    (save-excursion
-      (indent-region bound-start bound-end))))
+(defun grammatical-edit-indent-parent-area ()
+  (let ((range (tsc-node-position-range (tsc-get-parent (tree-sitter-node-at-point)))))
+    (indent-region (car range) (cdr range))))
 
 (defun grammatical-edit-equal ()
   (interactive)
