@@ -1196,7 +1196,8 @@ A and B are strings."
   (ignore-errors (tsc-node-type (tree-sitter-node-at-point))))
 
 (defun grammatical-edit-in-string-p ()
-  (eq (grammatical-edit-node-type-at-point) 'string))
+  (and (eq (grammatical-edit-node-type-at-point) 'string)
+       (> (point) (tsc-node-start-position (tree-sitter-node-at-point)))))
 
 (defun grammatical-edit-in-comment-p ()
   (or (eq (grammatical-edit-node-type-at-point) 'comment)
