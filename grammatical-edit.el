@@ -307,18 +307,28 @@ When in comment, kill to the beginning of the line."
    ))
 
 (defun grammatical-edit-wrap-round-object (object-start object-end)
+  (cond ((region-active-p)
+         (grammatical-edit-wrap-region object-start object-end))
+        ((grammatical-edit-in-string-p)
+         (let ((string-bound (grammatical-edit-current-node-range)))
+           (grammatical-edit-wrap (car string-bound) (cdr string-bound) object-start object-end)))
+        ((grammatical-edit-in-comment-p)
+         (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol) object-start object-end))
+        (t
+         (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp) object-start object-end)))
+
+  ;; Indent wrap area.
+  (grammatical-edit-indent-parent-area)
+
+  ;; Jump to wrap start position.
+  (when (grammatical-edit-outside-of-list-p)
+    (backward-char 1))
+  (goto-char (tsc-node-start-position (tsc-get-parent (tree-sitter-node-at-point)))))
+
+(defun grammatical-edit-outside-of-list-p ()
   (save-excursion
-    (cond ((region-active-p)
-           (grammatical-edit-wrap-region object-start object-end))
-          ((grammatical-edit-in-string-p)
-           (let ((string-bound (grammatical-edit-current-node-range)))
-             (grammatical-edit-wrap (car string-bound) (cdr string-bound) object-start object-end)))
-          ((grammatical-edit-in-comment-p)
-           (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol) object-start object-end))
-          (t
-           (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp) object-start object-end)))
-    ;; Indent wrap area.
-    (grammatical-edit-indent-parent-area)))
+    (backward-char 1)
+    (eq (tsc-node-type (tsc-get-parent (tree-sitter-node-at-point))) 'list)))
 
 (defun grammatical-edit-wrap-round-pair ()
   (interactive)
