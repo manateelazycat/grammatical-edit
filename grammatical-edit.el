@@ -116,8 +116,7 @@
     (insert object-start))
    (t
     (insert (format "%s%s" object-start object-end))
-    (backward-char))
-   ))
+    (backward-char))))
 
 (defun grammatical-edit-open-round ()
   (interactive)
@@ -193,8 +192,7 @@
          (insert "\""))
         (t
          (insert "\"\"")
-         (backward-char))
-        ))
+         (backward-char))))
 
 (defun grammatical-edit-space (arg)
   "Wrap space around cursor if cursor in blank parenthesis.
@@ -242,8 +240,7 @@ output: [ | ]
         ((grammatical-edit-in-empty-pair-p)
          (grammatical-edit-backward-delete-in-pair))
         ((not (grammatical-edit-after-open-pair-p))
-         (backward-delete-char 1))
-        ))
+         (backward-delete-char 1))))
 
 (defun grammatical-edit-forward-delete ()
   (interactive)
@@ -260,8 +257,7 @@ output: [ | ]
               (eq ?\) (char-after)))
          (delete-char 1))
         ((not (grammatical-edit-before-close-pair-p))
-         (delete-char 1))
-        ))
+         (delete-char 1))))
 
 (defun grammatical-edit-kill ()
   "Intelligent soft kill.
@@ -436,8 +432,7 @@ When in comment, kill to the beginning of the line."
            (if (equal (point) current-point)
                (backward-char 1)))
           (prev-node
-           (goto-char (tsc-node-start-position prev-node)))
-          )))
+           (goto-char (tsc-node-start-position prev-node))))))
 
 (defun grammatical-edit-jump-right ()
   (interactive)
@@ -458,8 +453,7 @@ When in comment, kill to the beginning of the line."
            (if (equal (point) current-point)
                (forward-char 1)))
           (next-node
-           (goto-char (tsc-node-end-position next-node)))
-          )))
+           (goto-char (tsc-node-end-position next-node))))))
 
 (defun grammatical-edit-delete-whitespace-before-cursor ()
   (kill-region (save-excursion
@@ -499,8 +493,7 @@ When in comment, kill to the beginning of the line."
       ;; Otherwhere return nil.
       (if (equal start-point (point))
           nil
-        open)
-      )))
+        open))))
 
 (defun grammatical-edit-backward-delete-in-pair ()
   (backward-delete-char 1)
@@ -728,8 +721,7 @@ When in comment, kill to the beginning of the line."
                       (forward-char)
                       (grammatical-edit-in-string-p))
                (forward-char))
-             (kill-region beginning (point)))
-           ))))
+             (kill-region beginning (point)))))))
 
 (defun grammatical-edit-kill-line-backward-in-string ()
   (cond ((save-excursion
@@ -745,8 +737,7 @@ When in comment, kill to the beginning of the line."
                       (backward-char)
                       (grammatical-edit-in-string-p))
                (backward-char))
-             (kill-region (point) beginning))
-           ))))
+             (kill-region (point) beginning))))))
 
 (defun grammatical-edit-skip-whitespace (trailing-p &optional limit)
   (funcall (if trailing-p 'skip-chars-forward 'skip-chars-backward)
@@ -890,8 +881,7 @@ When in comment, kill to the beginning of the line."
              (backward-char 1)
              (grammatical-edit-kill-parent-node))
             (t
-             (message "Nothing to kill in tag. ;)"))
-            ))
+             (message "Nothing to kill in tag. ;)"))))
 
      ;; Clean blank spaces before start tag.
      ((string-equal (grammatical-edit-node-type-at-point) ">")
@@ -902,8 +892,7 @@ When in comment, kill to the beginning of the line."
              (backward-char 1)
              (grammatical-edit-kill-grandfather-node))
             (t
-             (message "Nothing to kill in tag. ;)"))
-            ))
+             (message "Nothing to kill in tag. ;)"))))
 
      ;; Clean blank space before </
      ((string-equal (grammatical-edit-node-type-at-point) "</")
@@ -914,8 +903,7 @@ When in comment, kill to the beginning of the line."
              (backward-char 1)
              (grammatical-edit-kill-grandfather-node))
             (t
-             (message "Nothing to kill in tag. ;)"))
-            ))
+             (message "Nothing to kill in tag. ;)"))))
 
      ;; Kill all tag content if cursor in tag start area.
      ((eq (grammatical-edit-node-type-at-point) 'tag_name)
@@ -938,8 +926,7 @@ When in comment, kill to the beginning of the line."
                (grammatical-edit-skip-whitespace t (point-at-eol))
                (or (eq (char-after) ?\; )
                    (eolp)))
-             (kill-line)
-             )))
+             (kill-line))))
 
      ;; JavaScript string not identify by tree-sitter.
      ((and (eq (grammatical-edit-node-type-at-point) 'raw_text)
@@ -948,8 +935,7 @@ When in comment, kill to the beginning of the line."
 
      ;; Use common kill at last.
      (t
-      (grammatical-edit-common-mode-kill))
-     )))
+      (grammatical-edit-common-mode-kill)))))
 
 (defun grammatical-edit-in-string-state-p (&optional state)
   (ignore-errors
@@ -967,8 +953,7 @@ When in comment, kill to the beginning of the line."
           (eq (get-text-property (- (point) 1) 'face) 'font-lock-string-face))
          (and
           (eq (get-text-property (point) 'face) 'font-lock-doc-face)
-          (eq (get-text-property (- (point) 1) 'face) 'font-lock-doc-face))
-         )))))
+          (eq (get-text-property (- (point) 1) 'face) 'font-lock-doc-face)))))))
 
 (defun grammatical-edit-web-mode-backward-kill ()
   (message "Backward kill in web-mode is currently not implemented."))
@@ -1066,8 +1051,7 @@ When in comment, kill to the beginning of the line."
       ;; Jump to start tag, ready for insert tag attributes.
       (goto-char beg)
       (back-to-indentation)
-      (forward-char (+ 1 (length tag)))
-      )))
+      (forward-char (+ 1 (length tag))))))
 
 (defun grammatical-edit-web-mode-element-unwrap ()
   "Like `web-mode-element-vanish', but you don't need jump parent tag to unwrap.
@@ -1076,8 +1060,7 @@ Just like `paredit-splice-sexp+' style."
   (save-excursion
     (web-mode-element-parent)
     (web-mode-element-vanish 1)
-    (back-to-indentation)
-    ))
+    (back-to-indentation)))
 
 (defun grammatical-edit-match-paren (arg)
   "Go to the matching parenthesis if on parenthesis, otherwise insert %."
@@ -1095,8 +1078,7 @@ Just like `paredit-splice-sexp+' style."
           ((derived-mode-p 'web-mode)
            (grammatical-edit-web-mode-match-paren))
           (t
-           (self-insert-command (or arg 1))))
-         )))
+           (self-insert-command (or arg 1)))))))
 
 ;;;;;;;;;;;;;;;;; Utils functions ;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1150,8 +1132,7 @@ A and B are strings."
         (or (eq syn ?\) )
             (eq syn ?\" )
             (and (eq syn ?_ )
-                 (eq (char-before) ?\})))
-        ))))
+                 (eq (char-before) ?\})))))))
 
 (defun grammatical-edit-before-open-pair-p ()
   (unless (eobp)
@@ -1160,8 +1141,7 @@ A and B are strings."
         (or (eq syn ?\( )
             (eq syn ?\" )
             (and (eq syn ?_)
-                 (eq (char-after) ?\{)))
-        ))))
+                 (eq (char-after) ?\{)))))))
 
 (defun grammatical-edit-before-close-pair-p ()
   (unless (eobp)
@@ -1169,8 +1149,7 @@ A and B are strings."
       (let ((syn (char-syntax (char-after))))
         (or (eq syn ?\) )
             (and (eq syn ?_)
-                 (eq (char-after) ?\})))
-        ))))
+                 (eq (char-after) ?\})))))))
 
 (defun grammatical-edit-in-empty-pair-p ()
   (ignore-errors
@@ -1289,8 +1268,7 @@ A and B are strings."
    ;; Newline and indent.
    (t
     (newline arg)
-    (indent-according-to-mode)
-    )))
+    (indent-according-to-mode))))
 
 ;; Integrate with eldoc
 (with-eval-after-load 'eldoc
