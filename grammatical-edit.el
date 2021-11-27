@@ -369,7 +369,7 @@ When in comment, kill to the beginning of the line."
   (cond ((derived-mode-p 'web-mode)
          (grammatical-edit-web-mode-element-unwrap))
         ((grammatical-edit-in-string-p)
-         (grammatical-edit-splice-string argument))
+         (grammatical-edit-unwrap-string argument))
         (t
          (save-excursion
            (grammatical-edit-kill-surrounding-sexps-for-splice argument)
@@ -580,7 +580,7 @@ When in comment, kill to the beginning of the line."
       (delete-char -1)
       (delete-char +1)))))
 
-(defun grammatical-edit-splice-string (argument)
+(defun grammatical-edit-unwrap-string (argument)
   (let ((original-point (point))
         (start+end (grammatical-edit-current-node-range)))
     (let ((start (car start+end))
