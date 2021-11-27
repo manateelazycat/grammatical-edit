@@ -455,13 +455,6 @@ When in comment, kill to the beginning of the line."
           (next-node
            (goto-char (tsc-node-end-position next-node))))))
 
-(defun grammatical-edit-delete-whitespace-before-cursor ()
-  (kill-region (save-excursion
-                 (search-backward-regexp "[^ \t\n]" nil t)
-                 (forward-char)
-                 (point))
-               (point)))
-
 (defun grammatical-edit-delete-whitespace-around-cursor ()
   (kill-region (save-excursion
                  (search-backward-regexp "[^ \t\n]" nil t)
