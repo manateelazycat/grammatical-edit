@@ -266,7 +266,9 @@ When inside of code, kill forward S-expressions on the line, but respecting deli
 When in a string, kill to the end of the string.
 When in comment, kill to the end of the line."
   (interactive)
-  (cond ((derived-mode-p 'web-mode)
+  (cond ((region-active-p)
+         (kill-region (region-beginning) (region-end)))
+        ((derived-mode-p 'web-mode)
          (grammatical-edit-web-mode-kill))
         (t
          (grammatical-edit-common-mode-kill))))
