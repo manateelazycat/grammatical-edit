@@ -509,36 +509,17 @@ When in comment, kill to the beginning of the line."
     (delete-char 1)))
 
 (defun grammatical-edit-backward-delete-in-string ()
-  (let ((start+end (grammatical-edit-current-node-range)))
-    (cond
-     ;; Some language, such as Python, `grammatical-edit-current-node-range' will return nil cause by `beginning-of-defun' retun nil.
-     ;; This logical branch is handle this.
-     ((not start+end)
-      ;; First determine if it is in the string area?
-      (when (grammatical-edit-in-string-p)
-        (let ((syn-before (char-syntax (char-before)))
-              (syn-after  (char-syntax (char-after))))
-          (cond
-           ;; Remove double quotes when the string is empty
-           ((and (eq syn-before ?\" )
-                 (eq syn-after  ?\" ))
-            (backward-delete-char 1)
-            (delete-char 1))
-           ;; If there is still content in the string and the double quotation marks are in front of the cursor,
-           ;; no delete operation is performed.
-           ((eq syn-before ?\" ))
-           ;; If the cursor is not double quotes before and after, delete the previous character.
-           (t
-            (backward-delete-char 1))))))
-     ((not (eq (1- (point)) (car start+end)))
-      (if (grammatical-edit-in-string-escape-p)
-          (delete-char 1))
-      (backward-delete-char 1)
-      (if (grammatical-edit-in-string-escape-p)
-          (backward-delete-char 1)))
-     ((eq (point) (1- (cdr start+end)))
-      (backward-delete-char 1)
-      (delete-char 1)))))
+  (let* ((current-node (tree-sitter-node-at-point))
+         (in-empty-string (eq (tsc-node-type current-node)
+                              (save-excursion
+                                (backward-char 1)
+                                (tsc-node-type (tree-sitter-node-at-point)))))
+         (node-bound-length (save-excursion
+                              (goto-char (tsc-node-start-position current-node))
+                              (length (tsc-node-text (tree-sitter-node-at-point))))))
+    (if in-empty-string
+        (kill-region (- (point) node-bound-length) (+ (point) node-bound-length))
+      (backward-delete-char 1))))
 
 (defun grammatical-edit-forward-delete-in-string ()
   (let ((start+end (grammatical-edit-current-node-range)))
@@ -707,20 +688,19 @@ When in comment, kill to the beginning of the line."
     (kill-region sexp-beg (point))))
 
 (defun grammatical-edit-kill-line-in-string ()
-  (cond ((save-excursion
-           (grammatical-edit-skip-whitespace t (point-at-eol))
-           (eolp))
-         (kill-line))
-        (t
-         (save-excursion
-           (if (grammatical-edit-in-string-escape-p)
-               (backward-char))
-           (let ((beginning (point)))
-             (while (save-excursion
-                      (forward-char)
-                      (grammatical-edit-in-string-p))
-               (forward-char))
-             (kill-region beginning (point)))))))
+  (let* ((node (tree-sitter-node-at-point))
+         (node-end-pos (tsc-node-end-position node))
+         (node-end-str (save-excursion
+                         (goto-char node-end-pos)
+                         (backward-char 1)
+                         (ts-node-text (tree-sitter-node-at-point))))
+         (pos-before-node-end (- node-end-pos (length node-end-str))))
+    (if (eolp)
+        (kill-region (point) (min (save-excursion
+                                    (forward-line 1)
+                                    (point))
+                                  pos-before-node-end))
+      (kill-region (point) (min (point-at-eol) pos-before-node-end)))))
 
 (defun grammatical-edit-kill-line-backward-in-string ()
   (cond ((save-excursion
@@ -1184,8 +1164,9 @@ A and B are strings."
   (ignore-errors (tsc-node-type (tree-sitter-node-at-point))))
 
 (defun grammatical-edit-in-string-p ()
-  (and (eq (grammatical-edit-node-type-at-point) 'string)
-       (> (point) (tsc-node-start-position (tree-sitter-node-at-point)))))
+  (and (or (eq (grammatical-edit-node-type-at-point) 'string)
+           (string-equal (grammatical-edit-node-type-at-point) "\""))
+       (>= (point) (tsc-node-start-position (tree-sitter-node-at-point)))))
 
 (defun grammatical-edit-in-comment-p ()
   (or (eq (grammatical-edit-node-type-at-point) 'comment)
