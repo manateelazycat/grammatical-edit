@@ -637,8 +637,6 @@ When in comment, kill to the beginning of the line."
                 (grammatical-edit-elisp-mode-kill-rest-string))
                (t
                 (grammatical-edit-kill-line-in-string))))
-        ((grammatical-edit-in-single-quote-string-p)
-         (grammatical-edit-kill-line-in-single-quote-string))
         ((or (grammatical-edit-in-comment-p)
              (save-excursion
                (grammatical-edit-skip-whitespace t (point-at-eol))
@@ -654,8 +652,6 @@ When in comment, kill to the beginning of the line."
                       1)))
         ((grammatical-edit-in-string-p)
          (grammatical-edit-kill-line-backward-in-string))
-        ((grammatical-edit-in-single-quote-string-p)
-         (grammatical-edit-kill-line-backward-in-single-quote-string))
         ((or (grammatical-edit-in-comment-p)
              (save-excursion
                (grammatical-edit-skip-whitespace nil (point-at-bol))
@@ -664,19 +660,12 @@ When in comment, kill to the beginning of the line."
            (kill-line 0)))
         (t (grammatical-edit-kill-sexps-backward-on-line))))
 
-(defun grammatical-edit-kill-line-in-single-quote-string ()
-  (let ((sexp-end (save-excursion
-                    (forward-sexp)
-                    (backward-char)
-                    (point))))
-    (kill-region (point) sexp-end)))
-
-(defun grammatical-edit-kill-line-backward-in-single-quote-string ()
-  (let ((sexp-beg (save-excursion
-                    (backward-sexp)
-                    (forward-char)
-                    (point))))
-    (kill-region sexp-beg (point))))
+(defun grammatical-edit-js-mode-kill-rest-string ()
+  (kill-region (point)
+               (save-excursion
+                 (forward-sexp)
+                 (backward-char)
+                 (point))))
 
 (defun grammatical-edit-elisp-mode-kill-rest-string ()
   (kill-region (point) (1- (tsc-node-end-position (tree-sitter-node-at-point)))))
@@ -904,7 +893,7 @@ When in comment, kill to the beginning of the line."
      ;; JavaScript string not identify by tree-sitter.
      ((and (eq (grammatical-edit-node-type-at-point) 'raw_text)
            (grammatical-edit-in-string-state-p))
-      (grammatical-edit-kill-line-in-single-quote-string))
+      (grammatical-edit-js-mode-kill-rest-string))
 
      ;; Use common kill at last.
      (t
@@ -1133,25 +1122,6 @@ A and B are strings."
                (eq (char-syntax (char-after)) ?_)
                (eq (char-after) ?\})
                )))))
-
-(defun grammatical-edit-in-single-quote-string-p ()
-  (save-excursion
-    (when (grammatical-edit-ignore-errors
-           (progn
-             (save-excursion (backward-sexp))
-             (save-excursion (forward-sexp))))
-      (let* ((current-sexp (buffer-substring-no-properties
-                            (save-excursion
-                              (backward-sexp)
-                              (point))
-                            (save-excursion
-                              (forward-sexp)
-                              (point))
-                            ))
-             (first-char (substring current-sexp 0 1))
-             (last-char (substring current-sexp -1 nil)))
-        (and (string-equal first-char "'")
-             (string-equal last-char "'"))))))
 
 (defun grammatical-edit-node-type-at-point ()
   (ignore-errors (tsc-node-type (tree-sitter-node-at-point))))
