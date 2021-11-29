@@ -250,7 +250,7 @@ output: [ | ]
          (grammatical-edit-forward-delete-in-string))
         ((grammatical-edit-in-comment-p)
          (delete-char 1))
-        ((grammatical-edit-before-open-string-p)
+        ((grammatical-edit-before-string-open-quote-p)
          (grammatical-edit-forward-movein-string))
         ((grammatical-edit-before-open-pair-p)
          (grammatical-edit-forward-movein-or-delete-open-pair))
@@ -1151,10 +1151,13 @@ A and B are strings."
   (ignore-errors (tsc-node-type (tree-sitter-node-at-point))))
 
 (defun grammatical-edit-in-string-p ()
-  (or (eq (grammatical-edit-node-type-at-point) 'string)
-      (grammatical-edit-before-close-string-p)))
+  (or
+   ;; If node type is 'string, point must at right of string open quote.
+   (and (eq (grammatical-edit-node-type-at-point) 'string)
+        (> (point) (tsc-node-start-position (tree-sitter-node-at-point))))
+   (grammatical-edit-before-string-close-quote-p)))
 
-(defun grammatical-edit-before-close-string-p ()
+(defun grammatical-edit-before-string-close-quote-p ()
   (let ((current-node (tree-sitter-node-at-point)))
     (and
      (= (point) (tsc-node-start-position current-node))
@@ -1164,7 +1167,7 @@ A and B are strings."
        (and (not (string-equal (grammatical-edit-node-type-at-point) "\""))
             (not (eq (grammatical-edit-node-type-at-point) 'string)))))))
 
-(defun grammatical-edit-before-open-string-p ()
+(defun grammatical-edit-before-string-open-quote-p ()
   (and (not (grammatical-edit-in-string-p))
        (not (grammatical-edit-in-empty-string-p))
        (string-equal (grammatical-edit-node-type-at-point) "\"")))
