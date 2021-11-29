@@ -244,7 +244,9 @@ output: [ | ]
 
 (defun grammatical-edit-forward-delete ()
   (interactive)
-  (cond ((grammatical-edit-in-string-p)
+  (cond ((grammatical-edit-in-empty-string-p)
+         (grammatical-edit-delete-empty-string))
+        ((grammatical-edit-in-string-p)
          (grammatical-edit-forward-delete-in-string))
         ((grammatical-edit-in-comment-p)
          (delete-char 1))
@@ -520,14 +522,16 @@ When in comment, kill to the beginning of the line."
         (tsc-node-type (tree-sitter-node-at-point)))))
 
 (defun grammatical-edit-backward-delete-in-string ()
+  (if (grammatical-edit-in-empty-string-p)
+      (grammatical-edit-delete-empty-string)
+    (backward-delete-char 1)))
+
+(defun grammatical-edit-delete-empty-string ()
   (let* ((current-node (tree-sitter-node-at-point))
-         (in-empty-string (grammatical-edit-in-empty-string-p))
          (node-bound-length (save-excursion
                               (goto-char (tsc-node-start-position current-node))
                               (length (tsc-node-text (tree-sitter-node-at-point))))))
-    (if in-empty-string
-        (kill-region (- (point) node-bound-length) (+ (point) node-bound-length))
-      (backward-delete-char 1))))
+    (kill-region (- (point) node-bound-length) (+ (point) node-bound-length))))
 
 (defun grammatical-edit-forward-delete-in-string ()
   (let* ((current-node (tree-sitter-node-at-point))
