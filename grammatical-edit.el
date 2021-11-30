@@ -331,7 +331,7 @@ When in comment, kill to the beginning of the line."
 (defun grammatical-edit-nested-round-p ()
   (save-excursion
     (backward-char 1)
-    (let ((node-type (tsc-node-type (tree-sitter-node-at-point))))
+    (let ((node-type (grammatical-edit-node-type-at-point)))
       (or (string-equal node-type ")")
           (string-equal node-type "]")
           (string-equal node-type "}")))))
@@ -516,10 +516,10 @@ When in comment, kill to the beginning of the line."
     (delete-char 1)))
 
 (defun grammatical-edit-in-empty-string-p ()
-  (eq (tsc-node-type (tree-sitter-node-at-point))
+  (eq (grammatical-edit-node-type-at-point)
       (save-excursion
         (backward-char 1)
-        (tsc-node-type (tree-sitter-node-at-point)))))
+        (grammatical-edit-node-type-at-point))))
 
 (defun grammatical-edit-backward-delete-in-string ()
   (if (grammatical-edit-in-empty-string-p)
