@@ -511,6 +511,7 @@ When in comment, kill to the beginning of the line."
                                             (goto-char (tsc-node-start-position current-node))
                                             (tree-sitter-node-at-point)))))
     (and (or (eq (tsc-node-type current-node) 'string)
+             (eq (tsc-node-type current-node) 'interpreted_string_literal)
              (string-equal (tsc-node-type current-node) "\""))
          (save-excursion
            (backward-char (length string-quote-str))
@@ -1133,7 +1134,8 @@ A and B are strings."
 (defun grammatical-edit-in-string-p ()
   (or
    ;; If node type is 'string, point must at right of string open quote.
-   (and (eq (grammatical-edit-node-type-at-point) 'string)
+   (and (or (eq (grammatical-edit-node-type-at-point) 'string)
+            (eq (grammatical-edit-node-type-at-point) 'interpreted_string_literal))
         (> (point) (tsc-node-start-position (tree-sitter-node-at-point))))
    (grammatical-edit-before-string-close-quote-p)))
 
@@ -1145,7 +1147,9 @@ A and B are strings."
      (save-excursion
        (forward-char (length (tsc-node-text current-node)))
        (and (not (string-equal (grammatical-edit-node-type-at-point) "\""))
-            (not (eq (grammatical-edit-node-type-at-point) 'string)))))))
+            (not (eq (grammatical-edit-node-type-at-point) 'string))
+            (not (eq (grammatical-edit-node-type-at-point) 'interpreted_string_literal))
+            )))))
 
 (defun grammatical-edit-after-open-quote-p ()
   (and (not (string-equal (grammatical-edit-node-type-at-point) "\""))
