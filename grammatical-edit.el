@@ -506,15 +506,29 @@ When in comment, kill to the beginning of the line."
   (forward-char (length (tsc-node-text (tree-sitter-node-at-point)))))
 
 (defun grammatical-edit-in-empty-string-p ()
-  (eq (grammatical-edit-node-type-at-point)
-      (save-excursion
-        (backward-char 1)
-        (grammatical-edit-node-type-at-point))))
+  (let* ((current-node (tree-sitter-node-at-point))
+         (string-quote-str (tsc-node-text (save-excursion
+                                            (goto-char (tsc-node-start-position current-node))
+                                            (tree-sitter-node-at-point)))))
+    (and (or (eq (tsc-node-type current-node) 'string)
+             (string-equal (tsc-node-type current-node) "\""))
+         (save-excursion
+           (backward-char (length string-quote-str))
+           (= (length (tsc-node-text (tsc-get-parent (tree-sitter-node-at-point)))) (* 2 (length string-quote-str)))))))
 
 (defun grammatical-edit-backward-delete-in-string ()
-  (if (grammatical-edit-in-empty-string-p)
-      (grammatical-edit-delete-empty-string)
-    (backward-delete-char 1)))
+  (cond
+   ;; Delete empty string if cursor in empty string.
+   ((grammatical-edit-in-empty-string-p)
+    (grammatical-edit-delete-empty-string))
+   ;; Jump left to out of string quote if cursor after open quote.
+   ((grammatical-edit-after-open-quote-p)
+    (backward-char (length (save-excursion
+                             (backward-char 1)
+                             (tsc-node-text (tree-sitter-node-at-point))))))
+   ;; Delete previous character.
+   (t
+    (backward-delete-char 1))))
 
 (defun grammatical-edit-delete-empty-string ()
   (let* ((current-node (tree-sitter-node-at-point))
@@ -1132,6 +1146,12 @@ A and B are strings."
        (forward-char (length (tsc-node-text current-node)))
        (and (not (string-equal (grammatical-edit-node-type-at-point) "\""))
             (not (eq (grammatical-edit-node-type-at-point) 'string)))))))
+
+(defun grammatical-edit-after-open-quote-p ()
+  (and (not (string-equal (grammatical-edit-node-type-at-point) "\""))
+       (save-excursion
+         (backward-char 1)
+         (string-equal (grammatical-edit-node-type-at-point) "\""))))
 
 (defun grammatical-edit-before-string-open-quote-p ()
   (and (not (grammatical-edit-in-string-p))
