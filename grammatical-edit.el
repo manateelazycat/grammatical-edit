@@ -639,8 +639,9 @@ When in comment, kill to the beginning of the line."
                         current-prefix-arg
                       1)))
         ((grammatical-edit-in-string-p)
-         (cond ((derived-mode-p 'emacs-lisp-mode)
-                (grammatical-edit-elisp-mode-kill-rest-string))
+         (cond ((or (derived-mode-p 'emacs-lisp-mode)
+                    (derived-mode-p 'go-mode))
+                (grammatical-edit-kill-rest-string))
                (t
                 (grammatical-edit-kill-line-in-string))))
         ((or (grammatical-edit-in-comment-p)
@@ -673,7 +674,7 @@ When in comment, kill to the beginning of the line."
                  (backward-char)
                  (point))))
 
-(defun grammatical-edit-elisp-mode-kill-rest-string ()
+(defun grammatical-edit-kill-rest-string ()
   (kill-region (point) (1- (tsc-node-end-position (tree-sitter-node-at-point)))))
 
 (defun grammatical-edit-kill-line-in-string ()
