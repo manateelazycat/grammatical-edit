@@ -236,7 +236,7 @@ output: [ | ]
          (if (and (derived-mode-p 'sh-mode)
                   (eq ?\) (char-before)))
              (delete-char -1)
-           (grammatical-edit-backward-movein-or-delete-close-pair)))
+           (backward-char)))
         ((grammatical-edit-in-empty-pair-p)
          (grammatical-edit-backward-delete-in-pair))
         ((not (grammatical-edit-after-open-pair-p))
@@ -253,7 +253,7 @@ output: [ | ]
         ((grammatical-edit-before-string-open-quote-p)
          (grammatical-edit-forward-movein-string))
         ((grammatical-edit-before-open-pair-p)
-         (grammatical-edit-forward-movein-or-delete-open-pair))
+         (forward-char))
         ((grammatical-edit-in-empty-pair-p)
          (grammatical-edit-backward-delete-in-pair))
         ((and (derived-mode-p 'sh-mode)
@@ -502,18 +502,8 @@ When in comment, kill to the beginning of the line."
   (backward-delete-char 1)
   (delete-char 1))
 
-(defun grammatical-edit-backward-movein-or-delete-close-pair ()
-  (if (grammatical-edit-ignore-errors (save-excursion (backward-sexp)))
-      (backward-char)
-    (backward-delete-char 1)))
-
 (defun grammatical-edit-forward-movein-string ()
   (forward-char (length (tsc-node-text (tree-sitter-node-at-point)))))
-
-(defun grammatical-edit-forward-movein-or-delete-open-pair ()
-  (if (grammatical-edit-ignore-errors (save-excursion (forward-sexp)))
-      (forward-char)
-    (delete-char 1)))
 
 (defun grammatical-edit-in-empty-string-p ()
   (eq (grammatical-edit-node-type-at-point)
