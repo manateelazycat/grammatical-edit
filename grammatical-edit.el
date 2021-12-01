@@ -244,7 +244,9 @@ output: [ | ]
 
 (defun grammatical-edit-forward-delete ()
   (interactive)
-  (cond ((grammatical-edit-in-empty-backquote-string-p)
+  (cond ((region-active-p)
+         (kill-region (region-beginning) (region-end)))
+        ((grammatical-edit-in-empty-backquote-string-p)
          (grammatical-edit-delete-empty-backquote-string))
         ((grammatical-edit-in-empty-string-p)
          (grammatical-edit-delete-empty-string))
