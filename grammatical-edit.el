@@ -640,7 +640,7 @@ When in comment, kill to the beginning of the line."
                         current-prefix-arg
                       1)))
         ((grammatical-edit-in-string-p)
-         (grammatical-edit-kill-line-backward-in-string))
+         (grammatical-edit-kill-before-in-string))
         ((or (grammatical-edit-in-comment-p)
              (save-excursion
                (grammatical-edit-skip-whitespace nil (point-at-bol))
@@ -656,39 +656,11 @@ When in comment, kill to the beginning of the line."
                  (backward-char)
                  (point))))
 
-(defun grammatical-edit-kill-rest-string ()
+(defun grammatical-edit-kill-after-in-string ()
   (kill-region (point) (1- (tsc-node-end-position (tree-sitter-node-at-point)))))
 
-(defun grammatical-edit-kill-line-in-string ()
-  (let* ((node (tree-sitter-node-at-point))
-         (node-end-pos (tsc-node-end-position node))
-         (node-end-str (save-excursion
-                         (goto-char node-end-pos)
-                         (backward-char 1)
-                         (ts-node-text (tree-sitter-node-at-point))))
-         (pos-before-node-end (- node-end-pos (length node-end-str))))
-    (if (eolp)
-        (kill-region (point) (min (save-excursion
-                                    (forward-line 1)
-                                    (point))
-                                  pos-before-node-end))
-      (kill-region (point) (min (point-at-eol) pos-before-node-end)))))
-
-(defun grammatical-edit-kill-line-backward-in-string ()
-  (cond ((save-excursion
-           (grammatical-edit-skip-whitespace nil (point-at-bol))
-           (bolp))
-         (kill-line))
-        (t
-         (save-excursion
-           (if (grammatical-edit-in-string-escape-p)
-               (forward-char))
-           (let ((beginning (point)))
-             (while (save-excursion
-                      (backward-char)
-                      (grammatical-edit-in-string-p))
-               (backward-char))
-             (kill-region (point) beginning))))))
+(defun grammatical-edit-kill-before-in-string ()
+  (kill-region (point) (1+ (tsc-node-start-position (tree-sitter-node-at-point)))))
 
 (defun grammatical-edit-skip-whitespace (trailing-p &optional limit)
   (funcall (if trailing-p 'skip-chars-forward 'skip-chars-backward)
@@ -779,11 +751,7 @@ When in comment, kill to the beginning of the line."
                         current-prefix-arg
                       1)))
         ((grammatical-edit-in-string-p)
-         (cond ((or (derived-mode-p 'emacs-lisp-mode)
-                    (derived-mode-p 'go-mode))
-                (grammatical-edit-kill-rest-string))
-               (t
-                (grammatical-edit-kill-line-in-string))))
+         (grammatical-edit-kill-after-in-string))
         ((or (grammatical-edit-in-comment-p)
              (save-excursion
                (grammatical-edit-skip-whitespace t (point-at-eol))
