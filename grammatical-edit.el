@@ -244,7 +244,9 @@ output: [ | ]
 
 (defun grammatical-edit-forward-delete ()
   (interactive)
-  (cond ((grammatical-edit-in-empty-string-p)
+  (cond ((grammatical-edit-in-empty-backquote-string-p)
+         (grammatical-edit-delete-empty-backquote-string))
+        ((grammatical-edit-in-empty-string-p)
          (grammatical-edit-delete-empty-string))
         ((grammatical-edit-in-string-p)
          (grammatical-edit-forward-delete-in-string))
@@ -503,7 +505,11 @@ When in comment, kill to the beginning of the line."
   (delete-char 1))
 
 (defun grammatical-edit-forward-movein-string ()
-  (forward-char (length (tsc-node-text (tree-sitter-node-at-point)))))
+  (cond ((and (eq (grammatical-edit-node-type-at-point) 'raw_string_literal)
+              (eq (char-after) ?`))
+         (forward-char 1))
+        (t
+         (forward-char (length (tsc-node-text (tree-sitter-node-at-point)))))))
 
 (defun grammatical-edit-is-string-node-p (current-node)
   (or (eq (tsc-node-type current-node) 'string)
@@ -516,6 +522,8 @@ When in comment, kill to the beginning of the line."
   (let ((current-node (tree-sitter-node-at-point)))
     (and (grammatical-edit-is-string-node-p current-node)
          (string-equal (tsc-node-text current-node) "``")
+         (eq (char-before) ?`)
+         (eq (char-after) ?`)
          )))
 
 (defun grammatical-edit-in-empty-string-p ()
@@ -1160,7 +1168,8 @@ A and B are strings."
 (defun grammatical-edit-before-string-open-quote-p ()
   (and (not (grammatical-edit-in-string-p))
        (not (grammatical-edit-in-empty-string-p))
-       (string-equal (grammatical-edit-node-type-at-point) "\"")))
+       (or (string-equal (grammatical-edit-node-type-at-point) "\"")
+           (eq (grammatical-edit-node-type-at-point) 'raw_string_literal))))
 
 (defun grammatical-edit-in-comment-p ()
   (or (eq (grammatical-edit-node-type-at-point) 'comment)
