@@ -514,13 +514,17 @@ When in comment, kill to the beginning of the line."
 
 (defun grammatical-edit-in-empty-string-p ()
   (let* ((current-node (tree-sitter-node-at-point))
-         (string-quote-str (tsc-node-text (save-excursion
-                                            (goto-char (tsc-node-start-position current-node))
+         (parent-node (tsc-get-parent current-node))
+         (string-bound-start (tsc-node-text (save-excursion
+                                              (goto-char (tsc-node-start-position parent-node))
+                                              (tree-sitter-node-at-point))))
+         (string-bound-end (tsc-node-text (save-excursion
+                                            (goto-char (tsc-node-end-position parent-node))
+                                            (backward-char 1)
                                             (tree-sitter-node-at-point)))))
     (and (grammatical-edit-is-string-node-p current-node)
-         (save-excursion
-           (backward-char (length string-quote-str))
-           (= (length (tsc-node-text (tsc-get-parent (tree-sitter-node-at-point)))) (* 2 (length string-quote-str)))))))
+         (= (length (tsc-node-text parent-node)) (+ (length string-bound-start) (length string-bound-end)))
+         )))
 
 (defun grammatical-edit-backward-delete-in-string ()
   (cond
