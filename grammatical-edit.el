@@ -634,25 +634,6 @@ When in comment, kill to the beginning of the line."
         (last-command nil))
     (kill-region start end)))
 
-(defun grammatical-edit-kill-internal ()
-  (cond (current-prefix-arg
-         (kill-line (if (integerp current-prefix-arg)
-                        current-prefix-arg
-                      1)))
-        ((grammatical-edit-in-string-p)
-         (cond ((or (derived-mode-p 'emacs-lisp-mode)
-                    (derived-mode-p 'go-mode))
-                (grammatical-edit-kill-rest-string))
-               (t
-                (grammatical-edit-kill-line-in-string))))
-        ((or (grammatical-edit-in-comment-p)
-             (save-excursion
-               (grammatical-edit-skip-whitespace t (point-at-eol))
-               (or (eq (char-after) ?\; )
-                   (eolp))))
-         (kill-line))
-        (t (grammatical-edit-kill-sexps-on-line))))
-
 (defun grammatical-edit-backward-kill-internal ()
   (cond (current-prefix-arg
          (kill-line (if (integerp current-prefix-arg)
@@ -791,9 +772,25 @@ When in comment, kill to the beginning of the line."
     beg-of-list-p))
 
 (defun grammatical-edit-common-mode-kill ()
-  (if (grammatical-edit-is-blank-line-p)
-      (grammatical-edit-kill-blank-line-and-reindent)
-    (grammatical-edit-kill-internal)))
+  (cond ((grammatical-edit-is-blank-line-p)
+         (grammatical-edit-kill-blank-line-and-reindent))
+        (current-prefix-arg
+         (kill-line (if (integerp current-prefix-arg)
+                        current-prefix-arg
+                      1)))
+        ((grammatical-edit-in-string-p)
+         (cond ((or (derived-mode-p 'emacs-lisp-mode)
+                    (derived-mode-p 'go-mode))
+                (grammatical-edit-kill-rest-string))
+               (t
+                (grammatical-edit-kill-line-in-string))))
+        ((or (grammatical-edit-in-comment-p)
+             (save-excursion
+               (grammatical-edit-skip-whitespace t (point-at-eol))
+               (or (eq (char-after) ?\; )
+                   (eolp))))
+         (kill-line))
+        (t (grammatical-edit-kill-sexps-on-line))))
 
 (defun grammatical-edit-common-mode-backward-kill ()
   (if (grammatical-edit-is-blank-line-p)
