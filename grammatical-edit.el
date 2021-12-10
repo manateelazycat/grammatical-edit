@@ -174,7 +174,7 @@
 (defun grammatical-edit-double-quote ()
   (interactive)
   (cond ((region-active-p)
-         (grammatical-edit-wrap-double-quote))
+         (grammatical-edit-wrap-region "\"" "\""))
         ((grammatical-edit-in-string-p)
          (cond
           ((and (derived-mode-p 'python-mode)
@@ -309,28 +309,32 @@ When in comment, kill to the beginning of the line."
       (grammatical-edit-web-mode-element-wrap)))
    ;; Otherwise call `grammatical-edit-wrap-round-pair'
    (t
-    (grammatical-edit-wrap-round-pair))
-   ))
+    (grammatical-edit-wrap-round-pair))))
 
 (defun grammatical-edit-wrap-round-object (object-start object-end)
   (cond ((region-active-p)
          (grammatical-edit-wrap-region object-start object-end))
-        ((grammatical-edit-in-string-p)
-         (let ((string-bound (grammatical-edit-current-node-range)))
-           (grammatical-edit-wrap (car string-bound) (cdr string-bound) object-start object-end)))
         ((grammatical-edit-in-comment-p)
          (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol) object-start object-end))
+        ((or (derived-mode-p 'lisp-mode)
+             (derived-mode-p 'emacs-lisp-mode))
+         (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp) object-start object-end))
         (t
-         (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp) object-start object-end)))
+         (when (grammatical-edit-before-string-open-quote-p)
+           (grammatical-edit-forward-movein-string))
+         (let ((string-bound (grammatical-edit-current-node-range)))
+           (grammatical-edit-wrap (car string-bound) (cdr string-bound) object-start object-end))))
 
-  ;; Indent wrap area.
-  (grammatical-edit-indent-parent-area)
+  (unless (or (grammatical-edit-in-string-p)
+              (grammatical-edit-in-comment-p))
+    ;; Indent wrap area.
+    (grammatical-edit-indent-parent-area)
 
-  ;; Backward char if cursor in nested roud, such as `( ... )|)`
-  (when (grammatical-edit-nested-round-p)
-    (backward-char 1))
-  ;; Jump to start position of parent node.
-  (goto-char (tsc-node-start-position (tsc-get-parent (tree-sitter-node-at-point)))))
+    ;; Backward char if cursor in nested roud, such as `( ... )|)`
+    (when (grammatical-edit-nested-round-p)
+      (backward-char 1))
+    ;; Jump to start position of parent node.
+    (goto-char (tsc-node-start-position (tsc-get-parent (tree-sitter-node-at-point))))))
 
 (defun grammatical-edit-nested-round-p ()
   (save-excursion
@@ -351,28 +355,6 @@ When in comment, kill to the beginning of the line."
 (defun grammatical-edit-wrap-curly ()
   (interactive)
   (grammatical-edit-wrap-round-object "{" "}"))
-
-(defun grammatical-edit-wrap-double-quote ()
-  (interactive)
-  (cond ((and (region-active-p)
-              (grammatical-edit-in-string-p))
-         (cond ((and (derived-mode-p 'go-mode)
-                     (equal (save-excursion (nth 3 (grammatical-edit-current-parse-state))) 96))
-                (grammatical-edit-wrap-region "\"" "\""))
-               (t
-                (grammatical-edit-wrap-region "\\\"" "\\\""))))
-        ((region-active-p)
-         (grammatical-edit-wrap-region "\"" "\""))
-        ((grammatical-edit-in-string-p)
-         (goto-char (cdr (grammatical-edit-current-node-range))))
-        ((grammatical-edit-in-comment-p)
-         (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol)
-                                "\"" "\""))
-        (t
-         (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp)
-                                "\"" "\"")))
-  ;; Forward to jump in parenthesis.
-  (forward-char))
 
 (defun grammatical-edit-unwrap (&optional argument)
   (interactive "P")
@@ -1065,11 +1047,10 @@ Just like `paredit-splice-sexp+' style."
   "Insert A at position BEG, and B after END. Save previous point position.
 
 A and B are strings."
-  (save-excursion
-    (goto-char beg)
-    (insert a)
-    (goto-char (1+ end))
-    (insert b)))
+  (goto-char end)
+  (insert b)
+  (goto-char beg)
+  (insert a))
 
 (defun grammatical-edit-wrap-region (a b)
   "When a region is active, insert A and B around it, and jump after A.
@@ -1079,11 +1060,10 @@ A and B are strings."
     (let ((start (region-beginning))
           (end (region-end)))
       (setq mark-active nil)
-      (goto-char start)
-      (insert a)
-      (goto-char (1+ end))
+      (goto-char end)
       (insert b)
-      (goto-char (+ (length a) start)))))
+      (goto-char start)
+      (insert a))))
 
 (defun grammatical-edit-current-parse-state ()
   (let ((point (point)))
