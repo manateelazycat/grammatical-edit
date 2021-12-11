@@ -174,7 +174,7 @@
 (defun grammatical-edit-double-quote ()
   (interactive)
   (cond ((region-active-p)
-         (grammatical-edit-wrap-region "\"" "\""))
+         (grammatical-edit-wrap-double-quote))
         ((grammatical-edit-in-string-p)
          (cond
           ((and (derived-mode-p 'python-mode)
