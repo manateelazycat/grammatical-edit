@@ -306,13 +306,11 @@ When in comment, kill to the beginning of the line."
         ((grammatical-edit-in-string-p)
          (goto-char (cdr (grammatical-edit-current-node-range))))
         ((grammatical-edit-in-comment-p)
-         (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol)
-                                "\"" "\""))
+         (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol) "\"" "\""))
+        ((grammatical-edit-is-lisp-mode-p)
+         (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp) "\"" "\""))
         (t
-         (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp)
-                                "\"" "\"")))
-  ;; Forward to jump in parenthesis.
-  (forward-char))
+         (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol) "\"" "\""))))
 
 (defun grammatical-edit-wrap-round ()
   (interactive)
@@ -338,8 +336,7 @@ When in comment, kill to the beginning of the line."
          (grammatical-edit-wrap-region object-start object-end))
         ((grammatical-edit-in-comment-p)
          (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol) object-start object-end))
-        ((or (derived-mode-p 'lisp-mode)
-             (derived-mode-p 'emacs-lisp-mode))
+        ((grammatical-edit-is-lisp-mode-p)
          (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp) object-start object-end))
         (t
          (when (grammatical-edit-before-string-open-quote-p)
@@ -357,6 +354,10 @@ When in comment, kill to the beginning of the line."
       (backward-char 1))
     ;; Jump to start position of parent node.
     (goto-char (tsc-node-start-position (tsc-get-parent (tree-sitter-node-at-point))))))
+
+(defun grammatical-edit-is-lisp-mode-p ()
+  (or (derived-mode-p 'lisp-mode)
+      (derived-mode-p 'emacs-lisp-mode)))
 
 (defun grammatical-edit-nested-round-p ()
   (save-excursion
@@ -394,9 +395,7 @@ When in comment, kill to the beginning of the line."
            (delete-char 1)
            ;; Try to indent parent expression after unwrap pair.
            ;; This feature just enable in lisp-like language.
-           (when (or
-                  (derived-mode-p 'lisp-mode)
-                  (derived-mode-p 'emacs-lisp-mode))
+           (when (grammatical-edit-is-lisp-mode-p)
              (ignore-errors
                (backward-up-list)
                (indent-sexp)))))))
@@ -419,9 +418,7 @@ When in comment, kill to the beginning of the line."
                  (newline-and-indent)
                  ;; Try to clean unnecessary whitespace before close parenthesis.
                  ;; This feature just enable in lisp-like language.
-                 (when (or
-                        (derived-mode-p 'lisp-mode)
-                        (derived-mode-p 'emacs-lisp-mode))
+                 (when (grammatical-edit-is-lisp-mode-p)
                    (save-excursion
                      (goto-char up-list-point)
                      (backward-char)
