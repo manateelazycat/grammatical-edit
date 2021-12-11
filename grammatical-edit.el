@@ -292,6 +292,28 @@ When in comment, kill to the beginning of the line."
         (t
          (grammatical-edit-common-mode-backward-kill))))
 
+(defun grammatical-edit-wrap-double-quote ()
+  (interactive)
+  (cond ((and (region-active-p)
+              (grammatical-edit-in-string-p))
+         (cond ((and (derived-mode-p 'go-mode)
+                     (equal (save-excursion (nth 3 (grammatical-edit-current-parse-state))) 96))
+                (grammatical-edit-wrap-region "\"" "\""))
+               (t
+                (grammatical-edit-wrap-region "\\\"" "\\\""))))
+        ((region-active-p)
+         (grammatical-edit-wrap-region "\"" "\""))
+        ((grammatical-edit-in-string-p)
+         (goto-char (cdr (grammatical-edit-current-node-range))))
+        ((grammatical-edit-in-comment-p)
+         (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol)
+                                "\"" "\""))
+        (t
+         (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp)
+                                "\"" "\"")))
+  ;; Forward to jump in parenthesis.
+  (forward-char))
+
 (defun grammatical-edit-wrap-round ()
   (interactive)
   (cond
