@@ -60,6 +60,7 @@ Then binding below grammatical-edit.el commands with below keystrokes:
 
 (define-key grammatical-edit-mode-map (kbd "%") 'grammatical-edit-match-paren)
 (define-key grammatical-edit-mode-map (kbd "\"") 'grammatical-edit-double-quote)
+(define-key grammatical-edit-mode-map (kbd "'") 'grammatical-edit-single-quote)
 
 (define-key grammatical-edit-mode-map (kbd "SPC") 'grammatical-edit-space)
 (define-key grammatical-edit-mode-map (kbd "RET") 'grammatical-edit-newline)

@@ -171,6 +171,26 @@
         (t
          (grammatical-edit-fix-unbalanced-parentheses))))
 
+(defun grammatical-edit-single-quote ()
+  (interactive)
+  (cond ((grammatical-edit-is-lisp-mode-p)
+         (insert "'"))
+        ((region-active-p)
+         (grammatical-edit-wrap-single-quote))
+        ((grammatical-edit-in-string-p)
+         (cond
+          ((and (derived-mode-p 'python-mode)
+                (and (eq (char-before) ?\') (eq (char-after) ?\')))
+           (insert "''")
+           (backward-char))
+          (t
+           (insert "'"))))
+        ((grammatical-edit-in-comment-p)
+         (insert "'"))
+        (t
+         (insert "''")
+         (backward-char))))
+
 (defun grammatical-edit-double-quote ()
   (interactive)
   (cond ((region-active-p)
