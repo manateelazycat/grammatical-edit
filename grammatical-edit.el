@@ -730,10 +730,15 @@ When in comment, kill to the beginning of the line."
              ))))
 
 (defun grammatical-edit-kill-after-in-string ()
-  (let ((current-node (tree-sitter-node-at-point)))
+  (let* ((current-node (tree-sitter-node-at-point))
+         (parent-node (tsc-get-parent current-node))
+         (string-bound-end (tsc-node-text (save-excursion
+                                            (goto-char (tsc-node-end-position parent-node))
+                                            (backward-char 1)
+                                            (tree-sitter-node-at-point)))))
     (if (grammatical-edit-at-raw-string-begin-p)
         (kill-region (tsc-node-start-position current-node) (tsc-node-end-position current-node))
-      (kill-region (point) (1- (tsc-node-end-position current-node))))))
+      (kill-region (point) (- (tsc-node-end-position current-node) (length string-bound-end))))))
 
 (defun grammatical-edit-kill-before-in-string ()
   (kill-region (point) (1+ (tsc-node-start-position (tree-sitter-node-at-point)))))
