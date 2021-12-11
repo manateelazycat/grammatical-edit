@@ -69,6 +69,7 @@ Then binding below grammatical-edit.el commands with below keystrokes:
 (define-key grammatical-edit-mode-map (kbd "C-k") 'grammatical-edit-kill)
 
 (define-key grammatical-edit-mode-map (kbd "M-\"") 'grammatical-edit-wrap-double-quote)
+(define-key grammatical-edit-mode-map (kbd "M-'") 'grammatical-edit-wrap-single-quote)
 (define-key grammatical-edit-mode-map (kbd "M-[") 'grammatical-edit-wrap-bracket)
 (define-key grammatical-edit-mode-map (kbd "M-{") 'grammatical-edit-wrap-curly)
 (define-key grammatical-edit-mode-map (kbd "M-(") 'grammatical-edit-wrap-round)

@@ -312,6 +312,17 @@ When in comment, kill to the beginning of the line."
         (t
          (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol) "\"" "\""))))
 
+(defun grammatical-edit-wrap-single-quote ()
+  (interactive)
+  (cond ((region-active-p)
+         (grammatical-edit-wrap-region "'" "'"))
+        ((grammatical-edit-in-comment-p)
+         (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol) "'" "'"))
+        ((grammatical-edit-is-lisp-mode-p)
+         (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp) "'" "'"))
+        (t
+         (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol) "'" "'"))))
+
 (defun grammatical-edit-wrap-round ()
   (interactive)
   (cond
