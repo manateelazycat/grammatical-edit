@@ -562,16 +562,24 @@ When in comment, kill to the beginning of the line."
          (eq (char-after) ?`)
          )))
 
-(defun grammatical-edit-in-empty-string-p ()
+(defun grammatical-edit-get-parent-bound-info ()
   (let* ((current-node (tree-sitter-node-at-point))
          (parent-node (tsc-get-parent current-node))
-         (string-bound-start (tsc-node-text (save-excursion
+         (parent-bound-start (tsc-node-text (save-excursion
                                               (goto-char (tsc-node-start-position parent-node))
                                               (tree-sitter-node-at-point))))
-         (string-bound-end (tsc-node-text (save-excursion
+         (parent-bound-end (tsc-node-text (save-excursion
                                             (goto-char (tsc-node-end-position parent-node))
                                             (backward-char 1)
                                             (tree-sitter-node-at-point)))))
+    (list current-node parent-node parent-bound-start parent-bound-end)))
+
+(defun grammatical-edit-in-empty-string-p ()
+  (let* ((parent-bound-info (grammatical-edit-get-parent-bound-info))
+         (current-node (nth 0 parent-bound-info))
+         (parent-node (nth 1 parent-bound-info))
+         (string-bound-start (nth 2 parent-bound-info))
+         (string-bound-end (nth 3 parent-bound-info)))
     (and (grammatical-edit-is-string-node-p current-node)
          (= (length (tsc-node-text parent-node)) (+ (length string-bound-start) (length string-bound-end)))
          )))
@@ -732,12 +740,9 @@ When in comment, kill to the beginning of the line."
              ))))
 
 (defun grammatical-edit-kill-after-in-string ()
-  (let* ((current-node (tree-sitter-node-at-point))
-         (parent-node (tsc-get-parent current-node))
-         (string-bound-end (tsc-node-text (save-excursion
-                                            (goto-char (tsc-node-end-position parent-node))
-                                            (backward-char 1)
-                                            (tree-sitter-node-at-point)))))
+  (let* ((parent-bound-info (grammatical-edit-get-parent-bound-info))
+         (current-node (nth 0 parent-bound-info))
+         (string-bound-end (nth 3 parent-bound-info)))
     (if (grammatical-edit-at-raw-string-begin-p)
         (kill-region (tsc-node-start-position current-node) (tsc-node-end-position current-node))
       (kill-region (point) (- (tsc-node-end-position current-node) (length string-bound-end))))))
