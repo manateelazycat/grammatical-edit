@@ -352,12 +352,12 @@ When in comment, kill to the beginning of the line."
    ;; In template area, call `grammatical-edit-web-mode-element-wrap'
    ;; Otherwise, call `grammatical-edit-wrap-round-pair'
    ((and (buffer-file-name) (string-equal (file-name-extension (buffer-file-name)) "vue"))
-    (if (grammatical-edit-vue-in-template-area)
+    (if (grammatical-edit-vue-in-template-area-p)
         (grammatical-edit-web-mode-element-wrap)
       (grammatical-edit-wrap-round-pair)))
    ;; If is `web-mode' but not in *.Vue file, call `grammatical-edit-web-mode-element-wrap'
    ((derived-mode-p 'web-mode)
-    (if (grammatical-edit-in-script-area)
+    (if (grammatical-edit-in-script-area-p)
         (grammatical-edit-wrap-round-pair)
       (grammatical-edit-web-mode-element-wrap)))
    ;; Otherwise call `grammatical-edit-wrap-round-pair'
@@ -974,31 +974,30 @@ When in comment, kill to the beginning of the line."
   (interactive)
   (cond
    ((derived-mode-p 'web-mode)
-    (cond ((or (grammatical-edit-in-string-p)
-               (grammatical-edit-in-curly-p))
+    (cond ((or (eq (grammatical-edit-node-type-at-point) 'attribute_value)
+               (eq (grammatical-edit-node-type-at-point) 'raw_text)
+               (eq (grammatical-edit-node-type-at-point) 'text))
            (insert "="))
-          ;; When edit *.vue file, just insert double quote after equal when point in template area.
-          ((string-equal (file-name-extension (buffer-file-name)) "vue")
-           (if (grammatical-edit-vue-in-template-area)
-               (progn
-                 (insert "=\"\"")
-                 (backward-char 1))
-             (insert "=")))
-          ((grammatical-edit-in-script-area)
-           (insert "="))
-          (t
+          ;; Insert equal and double quotes if in tag attribute area.
+          ((and (string-equal (file-name-extension (buffer-file-name)) "vue")
+                (grammatical-edit-vue-in-template-area-p)
+                (or (eq (grammatical-edit-node-type-at-point) 'directive_name)
+                    (eq (grammatical-edit-node-type-at-point) 'attribute_name)
+                    (eq (grammatical-edit-node-type-at-point) 'start_tag)))
            (insert "=\"\"")
-           (backward-char 1))))
+           (backward-char 1))
+          (t
+           (insert "="))))
    (t
     (insert "="))))
 
-(defun grammatical-edit-in-script-area ()
+(defun grammatical-edit-in-script-area-p ()
   (and (save-excursion
          (search-backward-regexp "<script" nil t))
        (save-excursion
          (search-forward-regexp "</script>" nil t))))
 
-(defun grammatical-edit-vue-in-template-area ()
+(defun grammatical-edit-vue-in-template-area-p ()
   (and (save-excursion
          (search-backward-regexp "<template>" nil t))
        (save-excursion
@@ -1237,27 +1236,6 @@ A and B are strings."
             (point))
           (point))))
     (equal (length (string-trim string-before-cursor)) 0)))
-
-(defun grammatical-edit-in-curly-p ()
-  (ignore-errors
-    (save-excursion
-      (let* ((left-parent-pos
-              (progn
-                (backward-up-list)
-                (point)))
-             (right-parent-pos
-              (progn
-                (forward-list)
-                (point)))
-             (left-parent-char
-              (progn
-                (goto-char left-parent-pos)
-                (char-after)))
-             (right-parent-char
-              (progn
-                (goto-char right-parent-pos)
-                (char-before))))
-        (and (eq left-parent-char ?\{) (eq right-parent-char ?\}))))))
 
 (defun grammatical-edit-newline (arg)
   (interactive "p")
