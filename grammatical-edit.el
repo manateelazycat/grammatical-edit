@@ -1179,12 +1179,13 @@ A and B are strings."
   (ignore-errors (tsc-node-type (tree-sitter-node-at-point))))
 
 (defun grammatical-edit-in-string-p ()
-  (or
-   ;; If node type is 'string, point must at right of string open quote.
-   (let ((current-node (tree-sitter-node-at-point)))
-     (and (grammatical-edit-is-string-node-p current-node)
-          (> (point) (tsc-node-start-position current-node))))
-   (grammatical-edit-before-string-close-quote-p)))
+  (ignore-errors
+    (or
+     ;; If node type is 'string, point must at right of string open quote.
+     (let ((current-node (tree-sitter-node-at-point)))
+       (and (grammatical-edit-is-string-node-p current-node)
+            (> (point) (tsc-node-start-position current-node))))
+     (grammatical-edit-before-string-close-quote-p))))
 
 (defun grammatical-edit-before-string-close-quote-p ()
   (let ((current-node (tree-sitter-node-at-point)))
