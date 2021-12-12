@@ -195,6 +195,8 @@
   (interactive)
   (cond ((region-active-p)
          (grammatical-edit-wrap-double-quote))
+        ((grammatical-edit-in-single-quote-string-p)
+         (insert "\""))
         ((grammatical-edit-in-string-p)
          (cond
           ((and (derived-mode-p 'python-mode)
@@ -1186,6 +1188,12 @@ A and B are strings."
        (and (grammatical-edit-is-string-node-p current-node)
             (> (point) (tsc-node-start-position current-node))))
      (grammatical-edit-before-string-close-quote-p))))
+
+(defun grammatical-edit-in-single-quote-string-p ()
+  (let ((parent-node-text (tsc-node-text (tsc-get-parent (tree-sitter-node-at-point)))))
+    (and (grammatical-edit-in-string-p)
+         (> (length parent-node-text) 1)
+         (string-equal (substring parent-node-text 0 1) "'"))))
 
 (defun grammatical-edit-before-string-close-quote-p ()
   (let ((current-node (tree-sitter-node-at-point)))
