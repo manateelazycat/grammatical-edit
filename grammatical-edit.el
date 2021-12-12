@@ -1210,14 +1210,6 @@ A and B are strings."
                (backward-char 1)
                (eq (grammatical-edit-node-type-at-point) 'comment))))))
 
-(defun grammatical-edit-in-string-escape-p ()
-  (let ((oddp nil))
-    (save-excursion
-      (while (eq (char-before) ?\\ )
-        (setq oddp (not oddp))
-        (backward-char)))
-    oddp))
-
 (defun grammatical-edit-in-char-p (&optional argument)
   (let ((argument (or argument (point))))
     (and (eq (char-before argument) ?\\ )
