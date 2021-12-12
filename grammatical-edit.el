@@ -952,31 +952,12 @@ When in comment, kill to the beginning of the line."
              (kill-line))))
 
      ;; JavaScript string not identify by tree-sitter.
-     ((and (eq (grammatical-edit-node-type-at-point) 'raw_text)
-           (grammatical-edit-in-string-state-p))
+     ((eq (grammatical-edit-node-type-at-point) 'raw_text)
       (grammatical-edit-js-mode-kill-rest-string))
 
      ;; Use common kill at last.
      (t
       (grammatical-edit-common-mode-kill)))))
-
-(defun grammatical-edit-in-string-state-p (&optional state)
-  (ignore-errors
-    (unless (or (bobp) (eobp))
-      (save-excursion
-        (or
-         ;; In most situation, point inside a string when 4rd state `parse-partial-sexp' is non-nil.
-         ;; but at this time, if the string delimiter is the last character of the line, the point is not in the string.
-         ;; So we need exclude this situation when check state of `parse-partial-sexp'.
-         (and
-          (nth 3 (or state (grammatical-edit-current-parse-state)))
-          (not (equal (point) (line-end-position))))
-         (and
-          (eq (get-text-property (point) 'face) 'font-lock-string-face)
-          (eq (get-text-property (- (point) 1) 'face) 'font-lock-string-face))
-         (and
-          (eq (get-text-property (point) 'face) 'font-lock-doc-face)
-          (eq (get-text-property (- (point) 1) 'face) 'font-lock-doc-face)))))))
 
 (defun grammatical-edit-web-mode-backward-kill ()
   (message "Backward kill in web-mode is currently not implemented."))
