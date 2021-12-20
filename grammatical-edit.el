@@ -1175,10 +1175,11 @@ A and B are strings."
      (grammatical-edit-before-string-close-quote-p))))
 
 (defun grammatical-edit-in-single-quote-string-p ()
-  (let ((parent-node-text (tsc-node-text (tsc-get-parent (tree-sitter-node-at-point)))))
-    (and (grammatical-edit-in-string-p)
-         (> (length parent-node-text) 1)
-         (string-equal (substring parent-node-text 0 1) "'"))))
+  (ignore-errors
+    (let ((parent-node-text (tsc-node-text (tsc-get-parent (tree-sitter-node-at-point)))))
+      (and (grammatical-edit-in-string-p)
+           (> (length parent-node-text) 1)
+           (string-equal (substring parent-node-text 0 1) "'")))))
 
 (defun grammatical-edit-before-string-close-quote-p ()
   (let ((current-node (tree-sitter-node-at-point)))
