@@ -390,7 +390,8 @@ When in comment, kill to the beginning of the line."
 
 (defun grammatical-edit-is-lisp-mode-p ()
   (or (derived-mode-p 'lisp-mode)
-      (derived-mode-p 'emacs-lisp-mode)))
+      (derived-mode-p 'emacs-lisp-mode)
+      (derived-mode-p 'inferior-emacs-lisp-mode)))
 
 (defun grammatical-edit-nested-round-p ()
   (save-excursion
