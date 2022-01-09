@@ -267,7 +267,7 @@ output: [ | ]
 (defun grammatical-edit-forward-delete ()
   (interactive)
   (cond ((region-active-p)
-         (kill-region (region-beginning) (region-end)))
+         (delete-region (region-beginning) (region-end)))
         ((grammatical-edit-in-empty-backquote-string-p)
          (grammatical-edit-delete-empty-backquote-string))
         ((grammatical-edit-in-empty-string-p)
@@ -297,7 +297,7 @@ When in a string, kill to the end of the string.
 When in comment, kill to the end of the line."
   (interactive)
   (cond ((region-active-p)
-         (kill-region (region-beginning) (region-end)))
+         (delete-region (region-beginning) (region-end)))
         ((derived-mode-p 'web-mode)
          (grammatical-edit-web-mode-kill))
         (t
@@ -505,7 +505,7 @@ When in comment, kill to the beginning of the line."
            (goto-char (tsc-node-end-position next-node))))))
 
 (defun grammatical-edit-delete-whitespace-around-cursor ()
-  (kill-region (save-excursion
+  (delete-region (save-excursion
                  (search-backward-regexp "[^ \t\n]" nil t)
                  (forward-char)
                  (point))
@@ -515,7 +515,7 @@ When in comment, kill to the beginning of the line."
                  (point))))
 
 (defun grammatical-edit-kill-current-line ()
-  (kill-region (beginning-of-thing 'line) (end-of-thing 'line))
+  (delete-region (beginning-of-thing 'line) (end-of-thing 'line))
   (back-to-indentation))
 
 (defun grammatical-edit-missing-close ()
@@ -606,10 +606,10 @@ When in comment, kill to the beginning of the line."
          (node-bound-length (save-excursion
                               (goto-char (tsc-node-start-position current-node))
                               (length (tsc-node-text (tree-sitter-node-at-point))))))
-    (kill-region (- (point) node-bound-length) (+ (point) node-bound-length))))
+    (delete-region (- (point) node-bound-length) (+ (point) node-bound-length))))
 
 (defun grammatical-edit-delete-empty-backquote-string ()
-  (kill-region (save-excursion
+  (delete-region (save-excursion
                  (backward-char 1)
                  (point))
                (save-excursion
@@ -708,7 +708,7 @@ When in comment, kill to the beginning of the line."
 (defun grammatical-edit-hack-kill-region (start end)
   (let ((this-command nil)
         (last-command nil))
-    (kill-region start end)))
+    (delete-region start end)))
 
 (defun grammatical-edit-backward-kill-internal ()
   (cond (current-prefix-arg
@@ -726,7 +726,7 @@ When in comment, kill to the beginning of the line."
         (t (grammatical-edit-kill-sexps-backward-on-line))))
 
 (defun grammatical-edit-js-mode-kill-rest-string ()
-  (kill-region (point)
+  (delete-region (point)
                (save-excursion
                  (forward-sexp)
                  (backward-char)
@@ -745,11 +745,11 @@ When in comment, kill to the beginning of the line."
          (current-node (nth 0 parent-bound-info))
          (string-bound-end (nth 3 parent-bound-info)))
     (if (grammatical-edit-at-raw-string-begin-p)
-        (kill-region (tsc-node-start-position current-node) (tsc-node-end-position current-node))
-      (kill-region (point) (- (tsc-node-end-position current-node) (length string-bound-end))))))
+        (delete-region (tsc-node-start-position current-node) (tsc-node-end-position current-node))
+      (delete-region (point) (- (tsc-node-end-position current-node) (length string-bound-end))))))
 
 (defun grammatical-edit-kill-before-in-string ()
-  (kill-region (point) (1+ (tsc-node-start-position (tree-sitter-node-at-point)))))
+  (delete-region (point) (1+ (tsc-node-start-position (tree-sitter-node-at-point)))))
 
 (defun grammatical-edit-skip-whitespace (trailing-p &optional limit)
   (funcall (if trailing-p 'skip-chars-forward 'skip-chars-backward)
@@ -772,7 +772,7 @@ When in comment, kill to the beginning of the line."
       ;; Back to previous line if kill end point at beginng of line.
       (when (bolp)
         (backward-char 1))
-      (kill-region begin-point (point)))))
+      (delete-region begin-point (point)))))
 
 (defun grammatical-edit-kill-sexps-backward-on-line ()
   (if (grammatical-edit-in-char-p)
@@ -783,7 +783,7 @@ When in comment, kill to the beginning of the line."
       (when beg-of-list-p
         (up-list -1)
         (forward-char))
-      (kill-region (if (and (not beg-of-list-p) (eq (point-at-bol) bol))
+      (delete-region (if (and (not beg-of-list-p) (eq (point-at-bol) bol))
                        bol
                      (point))
                    beginning))))
@@ -860,14 +860,14 @@ When in comment, kill to the beginning of the line."
 
 (defun grammatical-edit-kill-parent-node ()
   (let ((range (tsc-node-position-range (tsc-get-parent (tree-sitter-node-at-point)))))
-    (kill-region (car range) (cdr range))))
+    (delete-region (car range) (cdr range))))
 
 (defun grammatical-edit-kill-grandfather-node ()
   (let ((range (tsc-node-position-range (tsc-get-parent (tsc-get-parent (tree-sitter-node-at-point))))))
-    (kill-region (car range) (cdr range))))
+    (delete-region (car range) (cdr range))))
 
 (defun grammatical-edit-kill-prepend-space ()
-  (kill-region (save-excursion
+  (delete-region (save-excursion
                  (search-backward-regexp "[^ \t\n]" nil t)
                  (forward-char 1)
                  (point))
@@ -885,7 +885,7 @@ When in comment, kill to the beginning of the line."
     (cond
      ;; Kill from current point to attribute end position.
      ((eq (grammatical-edit-node-type-at-point) 'attribute_value)
-      (kill-region (point) (tsc-node-end-position (tree-sitter-node-at-point))))
+      (delete-region (point) (tsc-node-end-position (tree-sitter-node-at-point))))
 
      ;; Kill parent node if cursor at attribute or directive node.
      ((or (eq (grammatical-edit-node-type-at-point) 'attribute_name)
@@ -964,7 +964,7 @@ When in comment, kill to the beginning of the line."
   (message "Backward kill in web-mode is currently not implemented."))
 
 (defun grammatical-edit-kill-blank-line-and-reindent ()
-  (kill-region (beginning-of-thing 'line) (end-of-thing 'line))
+  (delete-region (beginning-of-thing 'line) (end-of-thing 'line))
   (back-to-indentation))
 
 (defun grammatical-edit-indent-parent-area ()
