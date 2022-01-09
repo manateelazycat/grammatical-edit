@@ -506,13 +506,13 @@ When in comment, kill to the beginning of the line."
 
 (defun grammatical-edit-delete-whitespace-around-cursor ()
   (delete-region (save-excursion
-                 (search-backward-regexp "[^ \t\n]" nil t)
-                 (forward-char)
-                 (point))
-               (save-excursion
-                 (search-forward-regexp "[^ \t\n]" nil t)
-                 (backward-char)
-                 (point))))
+                   (search-backward-regexp "[^ \t\n]" nil t)
+                   (forward-char)
+                   (point))
+                 (save-excursion
+                   (search-forward-regexp "[^ \t\n]" nil t)
+                   (backward-char)
+                   (point))))
 
 (defun grammatical-edit-kill-current-line ()
   (delete-region (beginning-of-thing 'line) (end-of-thing 'line))
@@ -610,11 +610,11 @@ When in comment, kill to the beginning of the line."
 
 (defun grammatical-edit-delete-empty-backquote-string ()
   (delete-region (save-excursion
-                 (backward-char 1)
-                 (point))
-               (save-excursion
-                 (forward-char 1)
-                 (point))))
+                   (backward-char 1)
+                   (point))
+                 (save-excursion
+                   (forward-char 1)
+                   (point))))
 
 (defun grammatical-edit-forward-delete-in-string ()
   (let* ((current-node (tree-sitter-node-at-point))
@@ -727,10 +727,10 @@ When in comment, kill to the beginning of the line."
 
 (defun grammatical-edit-js-mode-kill-rest-string ()
   (delete-region (point)
-               (save-excursion
-                 (forward-sexp)
-                 (backward-char)
-                 (point))))
+                 (save-excursion
+                   (forward-sexp)
+                   (backward-char)
+                   (point))))
 
 (defun grammatical-edit-at-raw-string-begin-p ()
   (let ((current-node (tree-sitter-node-at-point)))
@@ -784,9 +784,9 @@ When in comment, kill to the beginning of the line."
         (up-list -1)
         (forward-char))
       (delete-region (if (and (not beg-of-list-p) (eq (point-at-bol) bol))
-                       bol
-                     (point))
-                   beginning))))
+                         bol
+                       (point))
+                     beginning))))
 
 (defun grammatical-edit-forward-sexps-to-kill (beginning eol)
   (let ((end-of-list-p nil)
@@ -868,10 +868,10 @@ When in comment, kill to the beginning of the line."
 
 (defun grammatical-edit-kill-prepend-space ()
   (delete-region (save-excursion
-                 (search-backward-regexp "[^ \t\n]" nil t)
-                 (forward-char 1)
-                 (point))
-               (point)))
+                   (search-backward-regexp "[^ \t\n]" nil t)
+                   (forward-char 1)
+                   (point))
+                 (point)))
 
 (defun grammatical-edit-at-tag-right (tag)
   (save-excursion
@@ -953,7 +953,9 @@ When in comment, kill to the beginning of the line."
              (kill-line))))
 
      ;; JavaScript string not identify by tree-sitter.
-     ((eq (grammatical-edit-node-type-at-point) 'raw_text)
+     ;; We need use `grammatical-edit-current-parse-state' test cursor is in string.
+     ((and (eq (grammatical-edit-node-type-at-point) 'raw_text)
+           (save-excursion (nth 3 (grammatical-edit-current-parse-state))))
       (grammatical-edit-js-mode-kill-rest-string))
 
      ;; Use common kill at last.
