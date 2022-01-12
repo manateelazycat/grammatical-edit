@@ -43,6 +43,7 @@ You can add grammatical-edit.el to the programming language mode like below:
                'lua-mode-hook
                'swift-mode-hook
                'minibuffer-inactive-mode-hook
+               'typescript-mode-hook
                ))
   (add-hook hook '(lambda () (grammatical-edit-mode 1))))
 ```
