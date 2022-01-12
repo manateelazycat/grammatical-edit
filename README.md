@@ -86,7 +86,7 @@ Then binding below grammatical-edit.el commands with below keystrokes:
 ```
 1. git clone https://github.com/Wilfred/tree-sitter-elisp
 2. gcc ./src/parser.c -fPIC -I./ --shared -o elisp.so
-3. cp ./elisp.so ~/.tree-sitter-langs/bin
+3. cp ./elisp.so ~/.tree-sitter-langs/bin (~/.tree-sitter-langs/bin is path of your tree-sitter-langs repo)
 (tree-sitter-load 'elisp "elisp")
 (add-to-list 'tree-sitter-major-mode-language-alist '(emacs-lisp-mode . elisp))
 ```
@@ -98,6 +98,16 @@ Then binding below grammatical-edit.el commands with below keystrokes:
 3. cp ./vue.so ~/.tree-sitter-langs/bin (~/.tree-sitter-langs/bin is path of your tree-sitter-langs repo)
 (tree-sitter-load 'vue "vue")
 (add-to-list 'tree-sitter-major-mode-language-alist '(web-mode . vue))
+```
+
+### Make tree-sitter to support Typescript
+
+```
+1. git clone https://github.com/tree-sitter/tree-sitter-typescript.git
+2. gcc ./tsx/src/parser.c ./tsx/src/scanner.cc -fPIC -I./ --shared -o typescript.so
+3. cp ./typescript.so ~/.tree-sitter-langs/bin (~/.tree-sitter-langs/bin is path of your tree-sitter-langs repo)
+(tree-sitter-load 'typescript "typescript")
+(add-to-list 'tree-sitter-major-mode-language-alist '(typescript-mode . typescript))
 ```
 
 More config about tree-sitter can refer to [my profile](https://github.com/manateelazycat/lazycat-emacs/blob/master/site-lisp/config/init-tree-sitter.el)
