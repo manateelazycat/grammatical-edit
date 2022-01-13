@@ -1124,7 +1124,8 @@ A and B are strings."
     (beginning-of-defun)
     (when (equal point (point))
       (beginning-of-line))
-    (parse-partial-sexp (point) point)))
+    (parse-partial-sexp (min (point) point)
+                        (max (point) point))))
 
 (defun grammatical-edit-current-node-range ()
   (tsc-node-position-range (tree-sitter-node-at-point)))
