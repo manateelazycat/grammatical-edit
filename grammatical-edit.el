@@ -380,6 +380,11 @@ When in comment, kill to the beginning of the line."
          (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol) object-start object-end))
         ((grammatical-edit-is-lisp-mode-p)
          (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp) object-start object-end))
+        ((member (grammatical-edit-node-type-at-point) (list "{" "(" "["))
+         (let ((match-paren-pos (save-excursion
+                                  (grammatical-edit-match-paren 1)
+                                  (point))))
+           (grammatical-edit-wrap (point) match-paren-pos object-start object-end)))
         (t
          (when (grammatical-edit-before-string-open-quote-p)
            (grammatical-edit-forward-movein-string))
