@@ -1255,14 +1255,16 @@ A and B are strings."
    ;; Newline and indent region if cursor in parentheses and character is not blank after cursor.
    ((and (looking-back "(\s*\\|{\s*\\|\\[\s*")
          (looking-at-p "\s*)\\|\s*}\\|\s*\\]"))
+    ;; Insert blank below at parentheses.
     (newline arg)
     (open-line 1)
+    ;; Indent close parentheses line.
     (save-excursion
-      (let* ((inhibit-message t)
-             (range (grammatical-edit-current-node-range))
-             (start (car range))
-             (end (cdr range)))
-        (indent-region start end)))
+      (let* ((inhibit-message t))
+        (goto-char (cdr (grammatical-edit-current-node-range)))
+        (indent-according-to-mode)
+        ))
+    ;; Indent blank line.
     (indent-according-to-mode))
    ;; Newline and indent.
    (t
