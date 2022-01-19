@@ -590,14 +590,15 @@ When in comment, kill to the beginning of the line."
     (list current-node parent-node parent-bound-start parent-bound-end)))
 
 (defun grammatical-edit-in-empty-string-p ()
-  (let* ((parent-bound-info (grammatical-edit-get-parent-bound-info))
-         (current-node (nth 0 parent-bound-info))
-         (parent-node (nth 1 parent-bound-info))
-         (string-bound-start (nth 2 parent-bound-info))
-         (string-bound-end (nth 3 parent-bound-info)))
-    (and (grammatical-edit-is-string-node-p current-node)
-         (= (length (tsc-node-text parent-node)) (+ (length string-bound-start) (length string-bound-end)))
-         )))
+  (or (let* ((parent-bound-info (grammatical-edit-get-parent-bound-info))
+             (current-node (nth 0 parent-bound-info))
+             (parent-node (nth 1 parent-bound-info))
+             (string-bound-start (nth 2 parent-bound-info))
+             (string-bound-end (nth 3 parent-bound-info)))
+        (and (grammatical-edit-is-string-node-p current-node)
+             (= (length (tsc-node-text parent-node)) (+ (length string-bound-start) (length string-bound-end)))
+             ))
+      (string-equal (tsc-node-text (tree-sitter-node-at-point)) "\"\"")))
 
 (defun grammatical-edit-backward-delete-in-string ()
   (cond
@@ -616,11 +617,14 @@ When in comment, kill to the beginning of the line."
     (backward-delete-char 1))))
 
 (defun grammatical-edit-delete-empty-string ()
-  (let* ((current-node (tree-sitter-node-at-point))
-         (node-bound-length (save-excursion
-                              (goto-char (tsc-node-start-position current-node))
-                              (length (tsc-node-text (tree-sitter-node-at-point))))))
-    (grammatical-edit-delete-region (- (point) node-bound-length) (+ (point) node-bound-length))))
+  (cond ((string-equal (tsc-node-text (tree-sitter-node-at-point)) "\"\"")
+         (grammatical-edit-delete-region (- (point) 1) (+ (point) 1)))
+        (t
+         (let* ((current-node (tree-sitter-node-at-point))
+                (node-bound-length (save-excursion
+                                     (goto-char (tsc-node-start-position current-node))
+                                     (length (tsc-node-text (tree-sitter-node-at-point))))))
+           (grammatical-edit-delete-region (- (point) node-bound-length) (+ (point) node-bound-length))))))
 
 (defun grammatical-edit-delete-empty-backquote-string ()
   (grammatical-edit-delete-region (save-excursion
