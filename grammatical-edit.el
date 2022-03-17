@@ -1280,6 +1280,21 @@ A and B are strings."
     (newline arg)
     (indent-according-to-mode))))
 
+(defun grammatical-edit-jump-up ()
+  (interactive)
+  (let* ((current-node (tree-sitter-node-at-point))
+         (parent-node (tsc-get-parent current-node)))
+    (if parent-node
+        (let ((parent-node-start-position (tsc-node-start-position parent-node)))
+          (if (equal parent-node-start-position (point))
+              (progn
+                (backward-char)
+                (grammatical-edit-jump-up))
+            (goto-char parent-node-start-position)
+            (scroll-down 3)))
+      (grammatical-edit-jump-left)
+      (back-to-indentation))))
+
 ;; Integrate with eldoc
 (with-eval-after-load 'eldoc
   (eldoc-add-command-completions
