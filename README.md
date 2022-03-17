@@ -87,7 +87,7 @@ Then binding below grammatical-edit.el commands with below keystrokes:
 ```
 1. git clone https://github.com/Wilfred/tree-sitter-elisp
 2. gcc ./src/parser.c -fPIC -I./ --shared -o elisp.so
-3. cp ./elisp.so ~/.tree-sitter-langs/bin (~/.tree-sitter-langs/bin is path of your tree-sitter-langs repo)
+3. cp ./elisp.so ~/.tree-sitter/langs/bin (~/.tree-sitter/langs/bin is path of your tree-sitter repo)
 (tree-sitter-load 'elisp "elisp")
 (add-to-list 'tree-sitter-major-mode-language-alist '(emacs-lisp-mode . elisp))
 ```
@@ -96,7 +96,7 @@ Then binding below grammatical-edit.el commands with below keystrokes:
 ```
 1. git clone https://github.com/ikatyang/tree-sitter-vue.git
 2. gcc ./src/parser.c ./src/scanner.cc -fPIC -I./ --shared -o vue.so
-3. cp ./vue.so ~/.tree-sitter-langs/bin (~/.tree-sitter-langs/bin is path of your tree-sitter-langs repo)
+3. cp ./vue.so ~/.tree-sitter/langs/bin (~/.tree-sitter/langs/bin is path of your tree-sitter repo)
 (tree-sitter-load 'vue "vue")
 (add-to-list 'tree-sitter-major-mode-language-alist '(web-mode . vue))
 ```
@@ -106,7 +106,7 @@ Then binding below grammatical-edit.el commands with below keystrokes:
 ```
 1. git clone https://github.com/tree-sitter/tree-sitter-typescript.git
 2. gcc ./tsx/src/parser.c ./tsx/src/scanner.c -fPIC -I./ --shared -o typescript.so
-3. cp ./typescript.so ~/.tree-sitter-langs/bin (~/.tree-sitter-langs/bin is path of your tree-sitter-langs repo)
+3. cp ./typescript.so ~/.tree-sitter/langs/bin (~/.tree-sitter/langs/bin is path of your tree-sitter repo)
 (tree-sitter-load 'typescript "typescript")
 (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-mode . typescript))
 ```
