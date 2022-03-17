@@ -511,6 +511,8 @@ When in comment, kill to the beginning of the line."
            (search-forward-regexp "\\s-+" nil t))
           ((grammatical-edit-in-string-p)
            (goto-char (tsc-node-end-position current-node)))
+          ((eq (char-after) ?\")
+           (forward-char))
           ((> (length current-node-text) 0)
            (goto-char (tsc-node-end-position current-node))
            (if (equal (point) current-point)
