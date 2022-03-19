@@ -1271,10 +1271,8 @@ A and B are strings."
     (open-line 1)
     ;; Indent close parentheses line.
     (save-excursion
-      (let* ((inhibit-message t))
-        (goto-char (cdr (grammatical-edit-current-node-range)))
-        (indent-according-to-mode)
-        ))
+      (grammatical-edit-jump-right)
+      (indent-according-to-mode))
     ;; Indent blank line.
     (indent-according-to-mode))
    ;; Newline and indent.
