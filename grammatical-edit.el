@@ -1271,7 +1271,8 @@ A and B are strings."
     (open-line 1)
     ;; Indent close parentheses line.
     (save-excursion
-      (grammatical-edit-jump-right)
+      (grammatical-edit-jump-left)
+      (grammatical-edit-match-paren 1)
       (indent-according-to-mode))
     ;; Indent blank line.
     (indent-according-to-mode))
