@@ -482,20 +482,36 @@ When in comment, kill to the beginning of the line."
          (prev-node (tsc-get-prev-sibling current-node))
          (current-node-text (tsc-node-text current-node))
          (current-point (point)))
-    (cond ((looking-back "\\s-+")
-           (search-backward-regexp "[^ \t\n]" nil t))
-          ((bolp)
-           (previous-line 1)
-           (end-of-line)
-           (search-backward-regexp "[^ \t\n]" nil t))
-          ((grammatical-edit-in-string-p)
-           (goto-char (tsc-node-start-position current-node)))
-          ((> (length current-node-text) 0)
-           (goto-char (tsc-node-start-position current-node))
-           (if (equal (point) current-point)
-               (backward-char 1)))
-          (prev-node
-           (goto-char (tsc-node-start-position prev-node))))))
+    (cond
+     ;; Skip blank space.
+     ((looking-back "\\s-+")
+      (search-backward-regexp "[^ \t\n]" nil t))
+
+     ;; Jump to previous non-blank char if at line beginng.
+     ((bolp)
+      (previous-line 1)
+      (end-of-line)
+      (search-backward-regexp "[^ \t\n]" nil t))
+
+     ;; Jump out string if in string.
+     ((grammatical-edit-in-string-p)
+      (goto-char (tsc-node-start-position current-node)))
+
+     ;; Jump to previous open char.
+     ((and (eq major-mode 'web-mode)
+           (eq (tsc-node-type current-node) 'raw_text))
+      (backward-char 1)
+      (while (not (looking-at "\\(['\"<({]\\|[[]\\)")) (backward-char 1)))
+
+     ;; Jump to node start position if current node exist.
+     ((> (length current-node-text) 0)
+      (goto-char (tsc-node-start-position current-node))
+      (if (equal (point) current-point)
+          (backward-char 1)))
+
+     ;; Otherwise, jump to start position of previous node.
+     (prev-node
+      (goto-char (tsc-node-start-position prev-node))))))
 
 (defun grammatical-edit-jump-right ()
   (interactive)
@@ -503,22 +519,40 @@ When in comment, kill to the beginning of the line."
          (next-node (tsc-get-next-sibling current-node))
          (current-node-text (tsc-node-text current-node))
          (current-point (point)))
-    (cond ((looking-at "\\s-+")
-           (search-forward-regexp "\\s-+" nil t))
-          ((eolp)
-           (next-line 1)
-           (beginning-of-line)
-           (search-forward-regexp "\\s-+" nil t))
-          ((grammatical-edit-in-string-p)
-           (goto-char (tsc-node-end-position current-node)))
-          ((eq (char-after) ?\")
-           (forward-char))
-          ((> (length current-node-text) 0)
-           (goto-char (tsc-node-end-position current-node))
-           (if (equal (point) current-point)
-               (forward-char 1)))
-          (next-node
-           (goto-char (tsc-node-end-position next-node))))))
+    (cond
+     ;; Skip blank space.
+     ((looking-at "\\s-+")
+      (search-forward-regexp "\\s-+" nil t))
+
+     ;; Jump to next non-blank char if at line end.
+     ((eolp)
+      (next-line 1)
+      (beginning-of-line)
+      (search-forward-regexp "\\s-+" nil t))
+
+     ;; Jump out string if in string.
+     ((grammatical-edit-in-string-p)
+      (goto-char (tsc-node-end-position current-node)))
+
+     ;; Jump into string if at before string open quote char.
+     ((eq (char-after) ?\")
+      (forward-char))
+
+     ;; Jump to next close char.
+     ((and (eq major-mode 'web-mode)
+           (eq (tsc-node-type current-node) 'raw_text))
+      (while (not (looking-at "\\(['\">)}]\\|]\\)")) (forward-char 1))
+      (forward-char 1))
+
+     ;; Jump to node end position if current node exist.
+     ((> (length current-node-text) 0)
+      (goto-char (tsc-node-end-position current-node))
+      (if (equal (point) current-point)
+          (forward-char 1)))
+
+     ;; Otherwise, jump to end position of next node.
+     (next-node
+      (goto-char (tsc-node-end-position next-node))))))
 
 (defun grammatical-edit-delete-whitespace-around-cursor ()
   (grammatical-edit-delete-region (save-excursion
