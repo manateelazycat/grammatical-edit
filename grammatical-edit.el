@@ -493,15 +493,15 @@ When in comment, kill to the beginning of the line."
       (end-of-line)
       (search-backward-regexp "[^ \t\n]" nil t))
 
-     ;; Jump out string if in string.
-     ((grammatical-edit-in-string-p)
-      (goto-char (tsc-node-start-position current-node)))
-
      ;; Jump to previous open char.
      ((and (eq major-mode 'web-mode)
            (eq (tsc-node-type current-node) 'raw_text))
       (backward-char 1)
       (while (not (looking-at "\\(['\"<({]\\|[[]\\)")) (backward-char 1)))
+
+     ;; Jump out string if in string.
+     ((grammatical-edit-in-string-p)
+      (goto-char (tsc-node-start-position current-node)))
 
      ;; Jump to node start position if current node exist.
      ((> (length current-node-text) 0)
@@ -530,10 +530,6 @@ When in comment, kill to the beginning of the line."
       (beginning-of-line)
       (search-forward-regexp "\\s-+" nil t))
 
-     ;; Jump out string if in string.
-     ((grammatical-edit-in-string-p)
-      (goto-char (tsc-node-end-position current-node)))
-
      ;; Jump into string if at before string open quote char.
      ((eq (char-after) ?\")
       (forward-char))
@@ -543,6 +539,10 @@ When in comment, kill to the beginning of the line."
            (eq (tsc-node-type current-node) 'raw_text))
       (while (not (looking-at "\\(['\">)}]\\|]\\)")) (forward-char 1))
       (forward-char 1))
+
+     ;; Jump out string if in string.
+     ((grammatical-edit-in-string-p)
+      (goto-char (tsc-node-end-position current-node)))
 
      ;; Jump to node end position if current node exist.
      ((> (length current-node-text) 0)
@@ -1232,6 +1232,11 @@ A and B are strings."
      (let ((current-node (tree-sitter-node-at-point)))
        (and (grammatical-edit-is-string-node-p current-node)
             (> (point) (tsc-node-start-position current-node))))
+
+     ;; Support *.vue string.
+     (and (string-equal (file-name-extension (buffer-file-name)) "vue")
+          (nth 3 (grammatical-edit-current-parse-state)))
+
      (grammatical-edit-before-string-close-quote-p))))
 
 (defun grammatical-edit-in-single-quote-string-p ()
