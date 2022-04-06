@@ -797,10 +797,12 @@ When in comment, kill to the beginning of the line."
 (defun grammatical-edit-kill-after-in-string ()
   (let* ((parent-bound-info (grammatical-edit-get-parent-bound-info))
          (current-node (nth 0 parent-bound-info))
-         (string-bound-end (nth 3 parent-bound-info)))
+         (current-node-bound-end (tsc-node-text (save-excursion
+                                                  (goto-char (tsc-node-end-position current-node))
+                                                  (tree-sitter-node-at-point)))))
     (if (grammatical-edit-at-raw-string-begin-p)
         (grammatical-edit-delete-region (tsc-node-start-position current-node) (tsc-node-end-position current-node))
-      (grammatical-edit-delete-region (point) (- (tsc-node-end-position current-node) (length string-bound-end))))))
+      (grammatical-edit-delete-region (point) (- (tsc-node-end-position current-node) (length current-node-bound-end))))))
 
 (defun grammatical-edit-kill-before-in-string ()
   (grammatical-edit-delete-region (point) (1+ (tsc-node-start-position (tree-sitter-node-at-point)))))
