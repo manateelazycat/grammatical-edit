@@ -182,7 +182,8 @@
 
 (defun grammatical-edit-single-quote ()
   (interactive)
-  (cond ((grammatical-edit-is-lisp-mode-p)
+  (cond ((or (grammatical-edit-is-lisp-mode-p)
+             (derived-mode-p 'markdown-mode))
          (insert "'"))
         ((region-active-p)
          (grammatical-edit-wrap-single-quote))
