@@ -375,33 +375,40 @@ When in comment, kill to the beginning of the line."
     (grammatical-edit-wrap-round-pair))))
 
 (defun grammatical-edit-wrap-round-object (object-start object-end)
-  (cond ((region-active-p)
-         (grammatical-edit-wrap-region object-start object-end))
-        ((grammatical-edit-in-comment-p)
-         (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol) object-start object-end))
-        ((grammatical-edit-is-lisp-mode-p)
-         (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp) object-start object-end))
-        ((member (grammatical-edit-node-type-at-point) (list "{" "(" "["))
-         (let ((match-paren-pos (save-excursion
-                                  (grammatical-edit-match-paren 1)
-                                  (point))))
-           (grammatical-edit-wrap (point) match-paren-pos object-start object-end)))
-        (t
-         (when (grammatical-edit-before-string-open-quote-p)
-           (grammatical-edit-forward-movein-string))
-         (let ((string-bound (grammatical-edit-current-node-range)))
-           (grammatical-edit-wrap (car string-bound) (cdr string-bound) object-start object-end))))
+  (let* ((not-between-in-round (and (grammatical-edit-is-lisp-mode-p)
+                                    (equal (char-before) ?\()
+                                    (not (equal (char-after) ?\()))))
+    (cond ((region-active-p)
+           (grammatical-edit-wrap-region object-start object-end))
+          ((grammatical-edit-in-comment-p)
+           (grammatical-edit-wrap (beginning-of-thing 'symbol) (end-of-thing 'symbol) object-start object-end))
+          ((grammatical-edit-is-lisp-mode-p)
+           (grammatical-edit-wrap (beginning-of-thing 'sexp) (end-of-thing 'sexp) object-start object-end))
+          ((member (grammatical-edit-node-type-at-point) (list "{" "(" "["))
+           (let ((match-paren-pos (save-excursion
+                                    (grammatical-edit-match-paren 1)
+                                    (point))))
+             (grammatical-edit-wrap (point) match-paren-pos object-start object-end)))
+          (t
+           (when (grammatical-edit-before-string-open-quote-p)
+             (grammatical-edit-forward-movein-string))
+           (let ((string-bound (grammatical-edit-current-node-range)))
+             (grammatical-edit-wrap (car string-bound) (cdr string-bound) object-start object-end))))
 
-  (unless (or (grammatical-edit-in-string-p)
-              (grammatical-edit-in-comment-p))
-    ;; Indent wrap area.
-    (grammatical-edit-indent-parent-area)
+    (unless (or (grammatical-edit-in-string-p)
+                (grammatical-edit-in-comment-p))
+      ;; Indent wrap area.
+      (grammatical-edit-indent-parent-area)
 
-    ;; Backward char if cursor in nested roud, such as `( ... )|)`
-    (when (grammatical-edit-nested-round-p)
-      (backward-char 1))
-    ;; Jump to start position of parent node.
-    (goto-char (tsc-node-start-position (tsc-get-parent (tree-sitter-node-at-point))))))
+      ;; Backward char if cursor in nested roud, such as `( ... )|)`
+      (when (grammatical-edit-nested-round-p)
+        (backward-char 1))
+      ;; Jump to start position of parent node.
+      (goto-char (tsc-node-start-position (tsc-get-parent (tree-sitter-node-at-point)))))
+
+    ;; Forward char if cursor not between in nested round.
+    (when not-between-in-round
+      (forward-char 1))))
 
 (defun grammatical-edit-is-lisp-mode-p ()
   (or (derived-mode-p 'lisp-mode)
