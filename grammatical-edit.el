@@ -413,7 +413,8 @@ When in comment, kill to the beginning of the line."
       (when (grammatical-edit-nested-round-p)
         (backward-char 1))
       ;; Jump to start position of parent node.
-      (goto-char (tsc-node-start-position (tsc-get-parent (tree-sitter-node-at-pos)))))
+      (unless (grammatical-edit-is-lisp-mode-p)
+        (goto-char (tsc-node-start-position (tsc-get-parent (tree-sitter-node-at-pos))))))
 
     ;; Forward char if cursor not between in nested round.
     (when not-between-in-round
