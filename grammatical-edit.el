@@ -814,18 +814,52 @@ When in comment, kill to the beginning of the line."
              ))))
 
 (defun grammatical-edit-kill-after-in-string ()
-  (let* ((parent-bound-info (grammatical-edit-get-parent-bound-info))
-         (current-node (nth 0 parent-bound-info))
-         (current-node-bound-end (tsc-node-text (save-excursion
-                                                  (goto-char (tsc-node-end-position current-node))
-                                                  (backward-char 1)
-                                                  (tree-sitter-node-at-pos)))))
-    (cond ((grammatical-edit-at-raw-string-begin-p)
-           (grammatical-edit-delete-region (tsc-node-start-position current-node) (tsc-node-end-position current-node)))
-          ((string-equal current-node-bound-end "'''")
-           (grammatical-edit-delete-region (point) (- (tsc-node-end-position current-node) (length current-node-bound-end))))
-          (t
-           (grammatical-edit-delete-region (point) (- (tsc-node-end-position current-node) 1))))))
+  (if (let ((current-node (tree-sitter-node-at-pos)))
+        (and (grammatical-edit-is-string-node-p current-node)
+             (> (point) (tsc-node-start-position current-node))))
+      (let* ((parent-bound-info (grammatical-edit-get-parent-bound-info))
+             (current-node (nth 0 parent-bound-info))
+             (current-node-bound-end (tsc-node-text (save-excursion
+                                                      (goto-char (tsc-node-end-position current-node))
+                                                      (backward-char 1)
+                                                      (tree-sitter-node-at-pos)))))
+        (cond ((grammatical-edit-at-raw-string-begin-p)
+               (grammatical-edit-delete-region (tsc-node-start-position current-node) (tsc-node-end-position current-node)))
+              ((string-equal current-node-bound-end "'''")
+               (grammatical-edit-delete-region (point) (- (tsc-node-end-position current-node) (length current-node-bound-end))))
+              (t
+               (grammatical-edit-delete-region (point) (- (tsc-node-end-position current-node) 1)))))
+    (grammatical-edit-kill-line-in-string)))
+
+(defun grammatical-edit-kill-line-in-string ()
+  (cond ((save-excursion
+           (grammatical-edit-skip-whitespace t (point-at-eol))
+           (eolp))
+         (kill-line))
+        (t
+         (save-excursion
+           (if (grammatical-edit-in-string-escape-p)
+               (backward-char))
+           (let ((beginning (point)))
+             (while (save-excursion
+                      (forward-char)
+                      (grammatical-edit-in-string-p))
+               (forward-char))
+             (kill-region beginning (point)))
+           ))))
+
+(defun grammatical-edit-in-string-escape-p ()
+  (let ((oddp nil))
+    (save-excursion
+      (while (eq (char-before) ?\\ )
+        (setq oddp (not oddp))
+        (backward-char)))
+    oddp))
+
+(defun grammatical-edit-skip-whitespace (trailing-p &optional limit)
+  (funcall (if trailing-p 'skip-chars-forward 'skip-chars-backward)
+           " \t\n"
+           limit))
 
 (defun grammatical-edit-kill-before-in-string ()
   (grammatical-edit-delete-region (point) (1+ (tsc-node-start-position (tree-sitter-node-at-pos)))))
@@ -1258,9 +1292,7 @@ A and B are strings."
        (and (grammatical-edit-is-string-node-p current-node)
             (> (point) (tsc-node-start-position current-node))))
 
-     ;; Support *.vue string.
-     (and (string-equal (file-name-extension (buffer-file-name)) "vue")
-          (nth 3 (grammatical-edit-current-parse-state)))
+     (nth 3 (grammatical-edit-current-parse-state))
 
      (grammatical-edit-before-string-close-quote-p))))
 
