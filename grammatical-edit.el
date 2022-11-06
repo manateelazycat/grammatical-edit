@@ -254,7 +254,8 @@ output: [ | ]
            (insert "  ")
            (backward-char 1))
           (t
-           (insert " ")))))
+           ;; Add `ignore-errors' avoid failed on ielm.
+           (ignore-errors (insert " "))))))
 
 (defun grammatical-edit-web-mode-match-paren ()
   (require 'sgml-mode)
