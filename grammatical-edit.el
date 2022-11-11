@@ -871,21 +871,33 @@ When in comment, kill to the beginning of the line."
 
 (defun grammatical-edit-kill-sexps-on-line ()
   "Kill forward sexp on the current line."
-  (when (grammatical-edit-in-char-p)
-    (backward-char 2))
-  (let* ((begin-point (point))
-         (eol (line-end-position))
-         (end-of-list-p (grammatical-edit-forward-sexps-to-kill begin-point eol)))
-    (when end-of-list-p
-      (up-list)
-      (backward-char))
-    (goto-char (if (and (not end-of-list-p) (eq (line-end-position) eol))
-                   eol
-                 (point)))
-    ;; NOTE: Back to previous line if point is at the beginning of line.
-    (when (bolp)
-      (backward-char 1))
-    (grammatical-edit-delete-region begin-point (point))))
+  (if (ignore-errors (save-excursion
+                       ;; We need make sure `forward-sexp' won't failed in current line.
+                       ;; Otherwise, kill rest content of current line.
+                       (let ((last-point-of-current-line (point-at-eol)))
+                         (goto-char (point-at-eol))
+                         (backward-word)
+                         (while (< (point) last-point-of-current-line)
+                           (forward-sexp))
+                         (point))))
+      (progn
+        (when (grammatical-edit-in-char-p)
+          (backward-char 2))
+        (let* ((begin-point (point))
+               (eol (line-end-position))
+               (end-of-list-p (grammatical-edit-forward-sexps-to-kill begin-point eol)))
+          (when end-of-list-p
+            (up-list)
+            (backward-char))
+          (goto-char (if (and (not end-of-list-p) (eq (line-end-position) eol))
+                         eol
+                       (point)))
+          ;; NOTE: Back to previous line if point is at the beginning of line.
+          (when (bolp)
+            (backward-char 1))
+          (grammatical-edit-delete-region begin-point (point))))
+    ;; Delete rest string in current line if `grammatical-edit-forward-sexps-to-kill' failed that cause by `forward-sexp'.
+    (grammatical-edit-delete-region (point) (point-at-eol))))
 
 (defun grammatical-edit-kill-sexps-backward-on-line ()
   "Kill backward sexp on the current line."
