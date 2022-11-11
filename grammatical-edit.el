@@ -871,15 +871,7 @@ When in comment, kill to the beginning of the line."
 
 (defun grammatical-edit-kill-sexps-on-line ()
   "Kill forward sexp on the current line."
-  (if (ignore-errors (save-excursion
-                       ;; We need make sure `forward-sexp' won't failed in current line.
-                       ;; Otherwise, kill rest content of current line.
-                       (let ((last-point-of-current-line (point-at-eol)))
-                         (goto-char (point-at-eol))
-                         (backward-word)
-                         (while (< (point) last-point-of-current-line)
-                           (forward-sexp))
-                         (point))))
+  (condition-case nil
       (progn
         (when (grammatical-edit-in-char-p)
           (backward-char 2))
@@ -896,8 +888,8 @@ When in comment, kill to the beginning of the line."
           (when (bolp)
             (backward-char 1))
           (grammatical-edit-delete-region begin-point (point))))
-    ;; Delete rest string in current line if `grammatical-edit-forward-sexps-to-kill' failed that cause by `forward-sexp'.
-    (grammatical-edit-delete-region (point) (point-at-eol))))
+    ;; Delete rest content of line when kill sexp throw `scan-error' error.
+    (scan-error (grammatical-edit-delete-region (point) (point-at-eol)))))
 
 (defun grammatical-edit-kill-sexps-backward-on-line ()
   "Kill backward sexp on the current line."
