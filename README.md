@@ -1,3 +1,6 @@
+# Thank you
+grammatical-edit is design for tree-sitter, and Emacs 29 built-in treesit, so please use [fingertip](https://github.com/manateelazycat/fingertip) instead this project, fingertip is same plugin that base on treesit.
+
 # What is grammatical-edit.el ?
 grammatical-edit.el is a plugin that provides grammatical edit base on tree-sitter.
 
